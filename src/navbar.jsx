@@ -2,14 +2,14 @@ import { Search } from "lucide-react";
 
 function NavBar() {
   return (
-    <nav className="bg-white shadow-md px-4 py-4">
+    <nav className="bg-white shadow-md px-4 py-4 w-full">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2 ">
           <img src="" alt="codenest logo" className="m-1" />
           <span className="text-2xl font-bold text-gray-950 bg-clip-text">
             CodeNest
           </span>
-          <div className="flex items-center gap-8 m-3 ml-5 ">
+          <div className="flex items-center gap-5 m-3 ml-5 ">
             <a
               className="text-sm font-medium text-gray-950 hover:text-gray-800 hover:underline underline-offset-4 transition-colors duration-200"
               href="#"
