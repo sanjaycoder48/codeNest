@@ -31,7 +31,7 @@ export default defineConfig([
       react: { version: 'detect' },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]|motion', argsIgnorePattern: '^[A-Z_]' }],
       // This project does not use prop-types; it is not a TypeScript codebase either.
       'react/prop-types': 'off',
     },
