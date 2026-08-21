@@ -4,7 +4,7 @@ import {
   ChevronDown, CircleDot, Code2, Database, ExternalLink, FileCode2, Github,
   FileDiff, GitPullRequest, Globe2, Home, Layers3, Link, ListChecks, LoaderCircle,
   LockKeyhole, Menu, Moon, PackageCheck, Plus, Rocket, Search, Send, Server,
-  Settings, ShieldCheck, Sparkles, Sun, TestTube2, UploadCloud,
+  Settings, ShieldCheck, Sparkles, Star, Sun, TestTube2, UploadCloud,
   WandSparkles, X, Zap,
 } from "lucide-react";
 import { demoTwin, showcaseProjects } from "./data/demoTwin";
@@ -69,6 +69,14 @@ function buildAIInsight(twin, type) {
     },
   };
   return insights[type] || insights.architecture;
+}
+
+// 228000 -> "228k". Raw six-digit counts are noise in a card footer.
+function formatCount(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(value >= 10000 ? 0 : 1).replace(/\.0$/, "")}k`;
+  return String(value);
 }
 
 function Button({ children, variant = "primary", className = "", ...props }) {
@@ -437,29 +445,58 @@ function Showcase({ twin, requestConfirm, notify, onAsk, onSelectTwin }) {
   };
   return <div className="page-stack">
     <PageTitle eyebrow="AI-generated case study & gallery" title="Project Showcase" description="Explore featured open-source Project Twins or publish your editable case study." action={<div className="segmented"><button className={editing ? "active" : ""} onClick={() => setEditing(true)}>Edit</button><button className={!editing ? "active" : ""} onClick={() => setEditing(false)}>Preview</button></div>} />
-    <section className="panel showcase-gallery-section" style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "16px" }}>
-        <p className="eyebrow">Featured Showcase Projects</p>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: "700" }}>Explore Open-Source Project Twins</h2>
-        <p style={{ fontSize: "0.875rem", color: "var(--text-muted, #64748b)" }}>Click any repository to inspect its live architecture, tech stack, and launch readiness.</p>
+    <section className="panel gallery">
+      <div className="gallery-head">
+        <p className="eyebrow">Featured showcase projects</p>
+        <h2>Explore open-source Project Twins</h2>
+        <p>Select a repository to load its verified architecture, stack and launch readiness into the workspace.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+      <div className="gallery-grid">
         {showcaseProjects.map((item) => {
-          const isSelected = twin.id === item.id;
+          const isActive = twin.id === item.id;
+          const score = item.readiness.score;
+          const scoreTone = score >= 85 ? "score-good" : score >= 70 ? "score-mid" : "score-low";
+          const stack = item.frameworks.slice(0, 3);
+          const extra = item.frameworks.length - stack.length;
+          const stars = item.project.stars;
           return (
-            <div key={item.id} className="panel" style={{ padding: "16px", border: isSelected ? "2px solid var(--accent, #6366f1)" : "1px solid var(--border-color, #e2e8f0)", background: "var(--card-bg, #ffffff)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <strong style={{ fontSize: "1rem" }}>{item.project.name}</strong>
-                <Badge tone={isSelected ? "violet" : "green"}>{item.readiness.score}/100</Badge>
+            <button
+              key={item.id}
+              type="button"
+              className={isActive ? "repo-card is-active" : "repo-card"}
+              aria-pressed={isActive}
+              aria-label={`Load the ${item.project.name} Project Twin`}
+              onClick={() => { onSelectTwin(item); notify(`Loaded ${item.project.name} Project Twin`); }}
+            >
+              <div className="repo-card-top">
+                <span className="repo-mark" aria-hidden="true">{item.project.name.slice(0, 2).toUpperCase()}</span>
+                <span className="repo-id">
+                  <strong>{item.project.name}</strong>
+                  <span>{item.project.fullName}</span>
+                </span>
+                <span className="repo-score">
+                  <strong className={scoreTone}>{score}</strong>
+                  <span>Ready</span>
+                </span>
               </div>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-muted, #64748b)", height: "36px", overflow: "hidden", marginBottom: "12px" }}>{item.project.description}</p>
-              <div className="stack-row" style={{ marginBottom: "12px" }}>
-                {item.frameworks.slice(0, 3).map((fw) => <Badge key={fw}>{fw}</Badge>)}
+
+              <p className="repo-desc">{item.project.description}</p>
+
+              <div className="repo-stack">
+                {stack.map((framework) => <Badge key={framework}>{framework}</Badge>)}
+                {extra > 0 ? <span className="repo-more">+{extra}</span> : null}
               </div>
-              <Button variant={isSelected ? "primary" : "secondary"} style={{ width: "100%", fontSize: "0.8rem" }} onClick={() => { onSelectTwin(item); notify(`Loaded ${item.project.name} Project Twin`); }}>
-                {isSelected ? "Current Workspace" : "Load Project Twin"}
-              </Button>
-            </div>
+
+              <div className="repo-card-foot">
+                <span className="repo-stats">
+                  <span><Star size={11} /> {formatCount(stars)}</span>
+                  <span><FileCode2 size={11} /> {formatCount(item.summary.files)}</span>
+                </span>
+                <span className="repo-cta">
+                  {isActive ? <><CheckCircle2 size={13} /> In workspace</> : <>Load twin <ArrowRight size={13} /></>}
+                </span>
+              </div>
+            </button>
           );
         })}
       </div>

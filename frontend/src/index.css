@@ -320,6 +320,52 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .preview-ready a { display: flex; align-items: center; gap: 5px; color: var(--violet); font-size: 9px; }
 .deployment-history { padding: 20px; overflow-x: auto; }
 
+/* Featured showcase gallery ------------------------------------------------
+   Uses the app's own tokens so it tracks both themes. The previous version
+   used --card-bg / --border-color / --text-muted / --accent, none of which
+   exist here, so every fallback applied and the cards rendered light-on-dark. */
+.gallery { padding: 22px; }
+.gallery-head { margin-bottom: 18px; }
+.gallery-head h2 { margin: 5px 0 4px; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.gallery-head p { margin: 0; max-width: 62ch; color: var(--muted); font-size: 11px; line-height: 1.6; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 12px; }
+
+.repo-card { position: relative; display: flex; flex-direction: column; gap: 12px; padding: 15px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); text-align: left; cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+.repo-card:hover { border-color: var(--border-strong); background: var(--surface-2); transform: translateY(-2px); }
+.repo-card:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+.repo-card.is-active { border-color: var(--violet); background: var(--surface-2); }
+
+.repo-card-top { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.repo-mark { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; background: var(--surface-3); color: var(--violet); font-size: 12px; font-weight: 800; }
+.repo-card.is-active .repo-mark { background: var(--violet-bg); }
+.repo-id { min-width: 0; }
+.repo-id strong { display: block; overflow: hidden; font-size: 12.5px; font-weight: 680; text-overflow: ellipsis; white-space: nowrap; }
+.repo-id span { display: block; margin-top: 2px; overflow: hidden; color: var(--faint); font-size: 9.5px; text-overflow: ellipsis; white-space: nowrap; }
+
+.repo-score { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.repo-score strong { font-size: 14px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1; }
+.repo-score span { color: var(--faint); font-size: 8px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.score-good { color: var(--green); }
+.score-mid { color: var(--amber); }
+.score-low { color: var(--red); }
+
+/* Clamp instead of a fixed height, so descriptions never cut through a line. */
+.repo-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin: 0; min-height: 2.9em; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+
+.repo-stack { display: flex; flex-wrap: wrap; gap: 5px; }
+.repo-more { align-self: center; color: var(--faint); font-size: 9px; }
+
+.repo-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 11px; border-top: 1px solid var(--border); }
+.repo-stats { display: flex; align-items: center; gap: 11px; color: var(--faint); font-size: 9.5px; }
+.repo-stats span { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+.repo-cta { display: inline-flex; align-items: center; gap: 5px; color: var(--violet); font-size: 10px; font-weight: 680; }
+.repo-card.is-active .repo-cta { color: var(--green); }
+
+@media (max-width: 620px) {
+  .gallery { padding: 16px; }
+  .gallery-grid { grid-template-columns: 1fr; }
+}
+
 .showcase-layout { display: grid; grid-template-columns: 310px minmax(0, 1fr); gap: 18px; align-items: start; }
 .showcase-editor { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
 .showcase-editor > label, .field-label { display: block; color: #c7cad0; font-size: 9px; font-weight: 650; }
