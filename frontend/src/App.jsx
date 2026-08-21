@@ -11,7 +11,7 @@ import { demoTwin, showcaseProjects } from "./data/demoTwin";
 import { analyzePublicRepository } from "./data/analyzePublicRepository";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
-const tabs = ["Overview", "Intelligence", "Readiness", "Upgrades", "Deploy", "Showcase"];
+const tabs = ["Overview", "Intelligence", "Readiness", "Upgrades", "Deploy"];
 const discoveryProjects = [
   { id: "ledger-loop", name: "LedgerLoop", owner: "maya-dev", description: "Open-source billing operations with typed workflows and a resilient event ledger.", stack: ["Next.js", "PostgreSQL", "Stripe"], category: "SaaS", score: 91, signal: "Strong architecture" },
   { id: "ship-shape", name: "ShipShape", owner: "build-labs", description: "A deployment observability toolkit that explains failed releases from logs and config.", stack: ["React", "Go", "ClickHouse"], category: "Developer tools", score: 87, signal: "12 verified features" },
@@ -338,9 +338,22 @@ function Architecture({ twin, detailed = false, onSelect }) {
 
 // The Overview tab has two levels: an index of every project twin, and the
 // detailed view for whichever one you open.
-function Overview({ twin, setActive, onAI, opened, onOpen, onBack }) {
-  if (!opened) return <OverviewIndex twin={twin} onOpen={onOpen} onImport={() => setActive("Discover")} />;
-  return <OverviewDetail twin={twin} setActive={setActive} onAI={onAI} onBack={onBack} />;
+function Overview({ twin, setActive, onAI, opened, onOpen, onBack, requestConfirm, notify, onAsk, view, setView }) {
+  if (!opened) return <OverviewIndex twin={twin} onOpen={onOpen} />;
+
+  return <div className="page-stack">
+    <button type="button" className="text-button back-link" onClick={onBack}>
+      <ArrowLeft size={14} /> All projects
+    </button>
+    <div className="subnav project-subnav">
+      {["Overview", "Case study"].map((item) => (
+        <button key={item} className={view === item ? "active" : ""} onClick={() => setView(item)}>{item}</button>
+      ))}
+    </div>
+    {view === "Case study"
+      ? <Showcase key={twin.id} twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={onAsk} />
+      : <OverviewDetail twin={twin} setActive={setActive} onAI={onAI} onCaseStudy={() => setView("Case study")} />}
+  </div>;
 }
 
 function OverviewIndex({ twin, onOpen }) {
@@ -361,7 +374,7 @@ function OverviewIndex({ twin, onOpen }) {
   </div>;
 }
 
-function OverviewDetail({ twin, setActive, onAI, onBack }) {
+function OverviewDetail({ twin, setActive, onAI, onCaseStudy }) {
   const majorFinding = twin.readiness.findings[0];
   const aiActions = [
     ["architecture", "Explain architecture", "Trace runtime layers and evidence", Layers3],
@@ -369,13 +382,10 @@ function OverviewDetail({ twin, setActive, onAI, onBack }) {
     ["dependencies", "Review dependencies", "Summarize the manifest surface", PackageCheck],
   ];
   return <div className="page-stack">
-    <button type="button" className="text-button back-link" onClick={onBack}>
-      <ArrowLeft size={14} /> All projects
-    </button>
     <section className="project-heading"><div><div className="heading-meta"><Badge tone="green"><CheckCircle2 size={13} /> Analysis complete</Badge><span>Updated {new Date(twin.generatedAt).toLocaleDateString()}</span></div><h1>CodeNest <span>— {twin.project.name}</span></h1><p>{twin.project.description}</p><div className="stack-row">{twin.frameworks.slice(0, 5).map((item) => <Badge key={item}>{item}</Badge>)}</div></div><div className="heading-actions"><Button variant="ghost" onClick={() => window.open(twin.project.repositoryUrl, "_blank", "noopener,noreferrer")}><ExternalLink size={16} /> Repository</Button><Button onClick={() => setActive("Deploy")}><Rocket size={16} /> Create preview</Button></div></section>
     <section className="readiness-banner"><ScoreRing score={twin.readiness.score} /><div className="readiness-copy"><p className="eyebrow">Launch readiness</p><h2>{twin.readiness.score >= 80 ? "Nearly ready to ship" : "A few issues need attention"}</h2><p>{twin.readiness.findings.length} evidence-backed findings across configuration, quality, security, and deployment.</p></div><div className="readiness-priority"><span>Highest priority</span><strong>{majorFinding?.problem || "No blocking issues detected"}</strong><button onClick={() => setActive("Readiness")}>Review findings <ArrowRight size={14} /></button></div></section>
     <div className="metric-strip">{[["Components", twin.summary.components, Box], ["Pages", twin.summary.pages, FileCode2], ["API routes", twin.summary.apiRoutes, Braces], ["Data models", twin.summary.models, Database], ["Dependencies", twin.summary.dependencies, PackageCheck]].map(([label, value, icon]) => <div key={label}>{createElement(icon, { size: 18 })}<span>{label}</span><strong>{value}</strong></div>)}</div>
-    <section className="panel ai-command-panel"><header><div><span className="assistant-mark"><Sparkles size={17} /></span><div><p className="eyebrow">AI project actions</p><h2>Work from verified context</h2></div></div><Badge tone="green"><ShieldCheck size={12} /> Evidence grounded</Badge></header><div className="ai-command-grid">{aiActions.map(([type, label, detail, icon]) => <button key={type} onClick={() => onAI(type)}><span>{createElement(icon, { size: 16 })}</span><div><strong>{label}</strong><small>{detail}</small></div><ArrowRight size={14} /></button>)}<button onClick={() => setActive("Showcase")}><span><WandSparkles size={16} /></span><div><strong>Draft showcase</strong><small>Turn project context into a case study</small></div><ArrowRight size={14} /></button></div></section>
+    <section className="panel ai-command-panel"><header><div><span className="assistant-mark"><Sparkles size={17} /></span><div><p className="eyebrow">AI project actions</p><h2>Work from verified context</h2></div></div><Badge tone="green"><ShieldCheck size={12} /> Evidence grounded</Badge></header><div className="ai-command-grid">{aiActions.map(([type, label, detail, icon]) => <button key={type} onClick={() => onAI(type)}><span>{createElement(icon, { size: 16 })}</span><div><strong>{label}</strong><small>{detail}</small></div><ArrowRight size={14} /></button>)}<button onClick={onCaseStudy}><span><WandSparkles size={16} /></span><div><strong>Draft showcase</strong><small>Turn project context into a case study</small></div><ArrowRight size={14} /></button></div></section>
     <div className="content-grid"><section className="panel architecture-panel"><div className="panel-header"><div><p className="eyebrow">System map</p><h2>Architecture</h2></div><button className="text-button" onClick={() => setActive("Intelligence")}>Explore map <ArrowRight size={14} /></button></div><Architecture twin={twin} onSelect={() => setActive("Intelligence")} /><p className="architecture-summary">The interface communicates with the application service over defined boundaries, which owns persistence and external integrations.</p></section><section className="panel"><div className="panel-header"><div><p className="eyebrow">What it does</p><h2>Detected features</h2></div><Badge>{twin.features.length} verified</Badge></div><div className="feature-list">{twin.features.slice(0, 5).map((feature, index) => <div key={feature}><span>{String(index + 1).padStart(2, "0")}</span><strong>{feature}</strong><Check size={15} /></div>)}</div></section></div>
     <div className="content-grid lower-grid"><section className="panel"><div className="panel-header"><div><p className="eyebrow">Recent signal</p><h2>Recommendations</h2></div><button className="text-button" onClick={() => setActive("Upgrades")}>View all <ArrowRight size={14} /></button></div>{twin.recommendations.slice(0, 2).map((item) => <button className="recommendation-row" onClick={() => setActive("Upgrades")} key={item.title}><span className="recommendation-icon"><Zap size={16} /></span><span><strong>{item.title}</strong><small>{item.benefit} · {item.migrationRisk} migration risk</small></span><ArrowRight size={15} /></button>)}</section><section className="panel"><div className="panel-header"><div><p className="eyebrow">Latest deployment</p><h2>Preview environment</h2></div><Badge tone="red">Failed</Badge></div><div className="deployment-brief"><div><AlertTriangle size={20} /><span><strong>Build stopped</strong><small>Missing VITE_API_URL</small></span></div><button className="text-button" onClick={() => setActive("Deploy")}>Open Deployment Doctor <ArrowRight size={14} /></button></div></section></div>
   </div>;
@@ -526,7 +536,7 @@ function ProjectCard({ item, active, onOpen }) {
   );
 }
 
-function Showcase({ twin, requestConfirm, notify, onAsk, onSelectTwin }) {
+function Showcase({ twin, requestConfirm, notify, onAsk }) {
   const [editing, setEditing] = useState(true);
   const [copy, setCopy] = useState(() => readShowcaseDrafts()[twin.id]?.copy || defaultShowcaseCopy(twin));
   const [included, setIncluded] = useState(() => readShowcaseDrafts()[twin.id]?.included || defaultSections());
@@ -563,24 +573,12 @@ function Showcase({ twin, requestConfirm, notify, onAsk, onSelectTwin }) {
     catch { notify("Showcase is published and ready to share"); }
   };
   return <div className="page-stack">
-    <PageTitle eyebrow="AI-generated case study & gallery" title="Project Showcase" description="Explore featured open-source Project Twins or publish your editable case study." action={<div className="segmented"><button className={editing ? "active" : ""} onClick={() => setEditing(true)}>Edit</button><button className={!editing ? "active" : ""} onClick={() => setEditing(false)}>Preview</button></div>} />
-    <section className="panel gallery">
-      <div className="gallery-head">
-        <p className="eyebrow">Featured showcase projects</p>
-        <h2>Explore open-source Project Twins</h2>
-        <p>Select a repository to load its verified architecture, stack and launch readiness into the workspace.</p>
-      </div>
-      <div className="gallery-grid">
-        {showcaseProjects.map((item) => (
-          <ProjectCard
-            key={item.id}
-            item={item}
-            active={twin.id === item.id}
-            onOpen={(next) => { onSelectTwin(next); notify(`Loaded ${next.project.name} Project Twin`); }}
-          />
-        ))}
-      </div>
-    </section>
+    <PageTitle
+      eyebrow="Public case study"
+      title={`Showcase ${twin.project.name}`}
+      description="Written from the analysed repository. Nothing private is included."
+      action={<div className="segmented"><button className={editing ? "active" : ""} onClick={() => setEditing(true)}>Edit</button><button className={!editing ? "active" : ""} onClick={() => setEditing(false)}>Preview</button></div>}
+    />
     <div className="showcase-layout">
       <section className="panel showcase-editor">
         <div className="editor-intro">
@@ -689,6 +687,7 @@ export default function App() {
   const [twin, setTwin] = useState(demoTwin);
   // false shows the project index on the Overview tab; true shows one project.
   const [overviewOpen, setOverviewOpen] = useState(false);
+  const [projectView, setProjectView] = useState("Overview");
   const [active, setActive] = useState(() => {
     const requested = window.location.hash.slice(1).toLowerCase();
     return [...tabs, "Discover", "Activity"].find((item) => item.toLowerCase() === requested) || "Overview";
@@ -710,8 +709,8 @@ export default function App() {
   const changeView = (view) => { setActive(view); window.history.replaceState(null, "", `#${view.toLowerCase()}`); if (view === "Activity") setUnreadActivity(0); if (view === "Overview") setOverviewOpen(false); };
   const requestConfirm = (state, action) => setConfirm({ ...state, actionHandler: action });
   const openAI = (type) => setAIInsight(buildAIInsight(twin, type));
-  const openProject = (nextTwin) => { setTwin(nextTwin); changeView("Overview"); setOverviewOpen(true); };
-  const completeImport = (nextTwin) => { setTwin(nextTwin); setImportOpen(false); changeView("Overview"); setOverviewOpen(true); notify(`${nextTwin.project.name} Project Twin is ready`); };
+  const openProject = (nextTwin) => { setTwin(nextTwin); changeView("Overview"); setOverviewOpen(true); setProjectView("Overview"); };
+  const completeImport = (nextTwin) => { setTwin(nextTwin); setImportOpen(false); changeView("Overview"); setOverviewOpen(true); setProjectView("Overview"); notify(`${nextTwin.project.name} Project Twin is ready`); };
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("project-twin-theme", theme);
@@ -725,6 +724,6 @@ export default function App() {
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
-  const pages = { Overview: <Overview twin={twin} setActive={changeView} onAI={openAI} opened={overviewOpen} onOpen={openProject} onBack={() => setOverviewOpen(false)} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} onAI={openAI} />, Readiness: <Readiness twin={twin} onAI={openAI} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy twin={twin} requestConfirm={requestConfirm} notify={notify} onAI={openAI} />, Showcase: <Showcase key={twin.id} twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} onSelectTwin={setTwin} /> };
+  const pages = { Overview: <Overview twin={twin} setActive={changeView} onAI={openAI} opened={overviewOpen} onOpen={openProject} onBack={() => setOverviewOpen(false)} view={projectView} setView={setProjectView} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} onAI={openAI} />, Readiness: <Readiness twin={twin} onAI={openAI} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy twin={twin} requestConfirm={requestConfirm} notify={notify} onAI={openAI} /> };
   return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onSelectTwin={openProject} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} /><main className="main-content">{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<AIInsightDialog insight={aiInsight} onClose={() => setAIInsight(null)} onNavigate={changeView} onAsk={() => setAskOpen(true)} /><SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
 }
