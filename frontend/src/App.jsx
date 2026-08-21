@@ -10,6 +10,20 @@ import { demoTwin } from "./data/demoTwin";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const tabs = ["Overview", "Intelligence", "Readiness", "Upgrades", "Deploy", "Showcase"];
+const discoveryProjects = [
+  { id: "ledger-loop", name: "LedgerLoop", owner: "maya-dev", description: "Open-source billing operations with typed workflows and a resilient event ledger.", stack: ["Next.js", "PostgreSQL", "Stripe"], category: "SaaS", score: 91, signal: "Strong architecture" },
+  { id: "ship-shape", name: "ShipShape", owner: "build-labs", description: "A deployment observability toolkit that explains failed releases from logs and config.", stack: ["React", "Go", "ClickHouse"], category: "Developer tools", score: 87, signal: "12 verified features" },
+  { id: "atlas-docs", name: "Atlas Docs", owner: "community-labs", description: "Living product documentation generated from source, schemas, and release history.", stack: ["SvelteKit", "Python", "pgvector"], category: "AI", score: 83, signal: "Evidence grounded" },
+  { id: "pulse-board", name: "PulseBoard", owner: "nora-code", description: "Privacy-first product analytics with real-time funnels and release annotations.", stack: ["Vue", "Fastify", "PostgreSQL"], category: "Analytics", score: 79, signal: "Recently updated" },
+];
+
+const activityEvents = [
+  { id: "analysis", type: "Analysis", title: "Project Twin analysis completed", detail: "Architecture, dependencies, routes, and environment requirements were indexed.", time: "12 minutes ago", target: "Intelligence", icon: Sparkles },
+  { id: "readiness", type: "Analysis", title: "Launch readiness recalculated", detail: "Three evidence-backed findings changed the project score to 78/100.", time: "24 minutes ago", target: "Readiness", icon: ShieldCheck },
+  { id: "upgrade", type: "Changes", title: "Upgrade recommendation created", detail: "An authenticated integration test was recommended for the escalation workflow.", time: "Today, 16:08", target: "Upgrades", icon: Zap },
+  { id: "preview", type: "Deployments", title: "Preview deployment needs attention", detail: "Deployment Doctor verified that VITE_API_URL is missing from the preview environment.", time: "Today, 15:42", target: "Deploy", icon: Rocket },
+  { id: "import", type: "Changes", title: "Repository imported", detail: "The main branch was connected and the initial Project Twin context was created.", time: "Yesterday, 18:20", target: "Overview", icon: Github },
+];
 
 function Button({ children, variant = "primary", className = "", ...props }) {
   return <button className={`button button-${variant} ${className}`} {...props}>{children}</button>;
@@ -108,13 +122,17 @@ function ConfirmDialog({ state, onClose, onConfirm }) {
   return <div className="modal-backdrop"><section className="modal modal-small" role="alertdialog" aria-modal="true"><div className="confirm-icon"><AlertTriangle size={21} /></div><h2>{state.title}</h2><p>{state.description}</p><div className="modal-actions"><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={onConfirm}>{state.action}</Button></div></section></div>;
 }
 
-function Sidebar({ active, onChange, onImport, mobileOpen, setMobileOpen }) {
+function Sidebar({ active, onChange, onImport, mobileOpen, setMobileOpen, unreadActivity }) {
+  const selectWorkspace = (label) => {
+    onChange(label === "Projects" ? "Overview" : label);
+    setMobileOpen(false);
+  };
   return <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`}>
     <div className="brand"><BrandMark /><span>Project Twin</span><button className="sidebar-close" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={18} /></button></div>
     <Button variant="secondary" className="new-project" onClick={onImport}><Plus size={16} /> New project</Button>
     <nav aria-label="Main navigation">
       <p className="nav-label">Workspace</p>
-      {[["Projects", Home], ["Discover", Globe2], ["Activity", Activity]].map(([label, Icon], index) => <button key={label} className={index === 0 ? "nav-item active" : "nav-item"}><Icon size={17} />{label}{label === "Activity" && <span className="nav-count">3</span>}</button>)}
+      {[["Projects", Home], ["Discover", Globe2], ["Activity", Activity]].map(([label, Icon]) => <button key={label} className={(label === "Projects" ? tabs.includes(active) : active === label) ? "nav-item active" : "nav-item"} onClick={() => selectWorkspace(label)}><Icon size={17} />{label}{label === "Activity" && unreadActivity > 0 ? <span className="nav-count">{unreadActivity}</span> : null}</button>)}
       <p className="nav-label nav-label-spaced">Project</p>
       {tabs.map((tab) => <button key={tab} className={active === tab ? "nav-item active" : "nav-item"} onClick={() => { onChange(tab); setMobileOpen(false); }}><CircleDot size={15} />{tab}</button>)}
     </nav>
@@ -151,6 +169,47 @@ function Overview({ twin, setActive }) {
     <div className="metric-strip">{[["Components", twin.summary.components, Box], ["Pages", twin.summary.pages, FileCode2], ["API routes", twin.summary.apiRoutes, Braces], ["Data models", twin.summary.models, Database], ["Dependencies", twin.summary.dependencies, PackageCheck]].map(([label, value, Icon]) => <div key={label}><Icon size={18} /><span>{label}</span><strong>{value}</strong></div>)}</div>
     <div className="content-grid"><section className="panel architecture-panel"><div className="panel-header"><div><p className="eyebrow">System map</p><h2>Architecture</h2></div><button className="text-button" onClick={() => setActive("Intelligence")}>Explore map <ArrowRight size={14} /></button></div><Architecture twin={twin} /><p className="architecture-summary">The interface communicates with the application service over defined boundaries, which owns persistence and external integrations.</p></section><section className="panel"><div className="panel-header"><div><p className="eyebrow">What it does</p><h2>Detected features</h2></div><Badge>{twin.features.length} verified</Badge></div><div className="feature-list">{twin.features.slice(0, 5).map((feature, index) => <div key={feature}><span>{String(index + 1).padStart(2, "0")}</span><strong>{feature}</strong><Check size={15} /></div>)}</div></section></div>
     <div className="content-grid lower-grid"><section className="panel"><div className="panel-header"><div><p className="eyebrow">Recent signal</p><h2>Recommendations</h2></div><button className="text-button" onClick={() => setActive("Upgrades")}>View all <ArrowRight size={14} /></button></div>{twin.recommendations.slice(0, 2).map((item) => <div className="recommendation-row" key={item.title}><span className="recommendation-icon"><Zap size={16} /></span><div><strong>{item.title}</strong><p>{item.benefit} · {item.migrationRisk} migration risk</p></div><ArrowRight size={15} /></div>)}</section><section className="panel"><div className="panel-header"><div><p className="eyebrow">Latest deployment</p><h2>Preview environment</h2></div><Badge tone="red">Failed</Badge></div><div className="deployment-brief"><div><AlertTriangle size={20} /><span><strong>Build stopped</strong><small>Missing VITE_API_URL</small></span></div><button className="text-button" onClick={() => setActive("Deploy")}>Open Deployment Doctor <ArrowRight size={14} /></button></div></section></div>
+  </div>;
+}
+
+function Discover({ twin, setActive }) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
+  const [selected, setSelected] = useState(null);
+  const currentProject = {
+    id: twin.id,
+    name: twin.project.name,
+    owner: twin.project.fullName.split("/")[0],
+    description: twin.project.description,
+    stack: twin.frameworks.slice(0, 3),
+    category: "Your project",
+    score: twin.readiness.score,
+    signal: `${twin.summary.apiRoutes} API routes verified`,
+    current: true,
+  };
+  const projects = [currentProject, ...discoveryProjects];
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleProjects = projects.filter((project) => {
+    const matchesCategory = category === "All" || project.category === category;
+    const matchesQuery = !normalizedQuery || `${project.name} ${project.owner} ${project.description} ${project.stack.join(" ")}`.toLowerCase().includes(normalizedQuery);
+    return matchesCategory && matchesQuery;
+  });
+
+  return <div className="page-stack"><PageTitle eyebrow="Community intelligence" title="Discover projects" description="Explore public Project Twins through verified architecture, technology, and readiness signals." action={<Button onClick={() => setActive("Overview")}><Home size={16} /> Open your project</Button>} />
+    <section className="discover-toolbar panel"><div className="discover-search"><Search size={17} /><input aria-label="Search discovered projects" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search projects, technologies, or owners" />{query ? <button aria-label="Clear discovery search" onClick={() => setQuery("")}><X size={15} /></button> : null}</div><div className="filter-row discover-filters">{["All", "Developer tools", "AI", "SaaS", "Analytics"].map((item) => <button key={item} className={category === item ? "active" : ""} onClick={() => setCategory(item)}>{item}</button>)}</div></section>
+    <div className="discover-meta"><span>{visibleProjects.length} projects</span><span>Ranked by verified project context</span></div>
+    {visibleProjects.length ? <section className="discover-grid">{visibleProjects.map((project) => <article className="discover-card panel" key={project.id}><header><span className="discover-mark">{project.name.slice(0, 2).toUpperCase()}</span><div><h2>{project.name}</h2><p>{project.owner}</p></div>{project.current ? <Badge tone="violet">Your Twin</Badge> : <Badge tone="green">{project.score}/100</Badge>}</header><p className="discover-description">{project.description}</p><div className="stack-row">{project.stack.map((item) => <Badge key={item}>{item}</Badge>)}</div><footer><span><CircleDot size={12} /> {project.signal}</span><Button variant="ghost" onClick={() => project.current ? setActive("Overview") : setSelected(project)}>{project.current ? "Open Twin" : "Inspect"} <ArrowRight size={14} /></Button></footer></article>)}</section> : <section className="panel empty-state"><Search size={23} /><strong>No projects match those filters</strong><p>Try a technology, owner, or a different category.</p><Button variant="ghost" onClick={() => { setQuery(""); setCategory("All"); }}>Clear filters</Button></section>}
+    {selected ? <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setSelected(null)}><section className="modal discover-detail" role="dialog" aria-modal="true" aria-labelledby="discover-project-title"><header className="modal-header"><div><p className="eyebrow">Public Project Twin</p><h2 id="discover-project-title">{selected.name}</h2></div><button className="icon-button" aria-label="Close discovered project" onClick={() => setSelected(null)}><X size={18} /></button></header><p>{selected.description}</p><div className="discovery-score"><ScoreRing score={selected.score} small /><div><span>Launch readiness</span><strong>{selected.signal}</strong><p>Based on public repository evidence available to Project Twin.</p></div></div><div className="stack-row">{selected.stack.map((item) => <Badge key={item}>{item}</Badge>)}</div><div className="modal-actions"><Button variant="ghost" onClick={() => setSelected(null)}>Close</Button><Button onClick={() => window.open(`https://github.com/${selected.owner}`, "_blank", "noopener,noreferrer")}><Github size={15} /> View owner</Button></div></section></div> : null}
+  </div>;
+}
+
+function ActivityView({ twin, setActive, notify }) {
+  const [filter, setFilter] = useState("All");
+  const events = activityEvents.map((event) => event.id === "analysis" ? { ...event, detail: `${twin.summary.files} repository files were classified and ${twin.evidence.length} high-signal files were indexed.` } : event);
+  const visibleEvents = events.filter((event) => filter === "All" || event.type === filter);
+  return <div className="page-stack"><PageTitle eyebrow="Project evolution" title="Activity" description={`A chronological record of analysis, recommendations, deployments, and important changes for ${twin.project.name}.`} action={<Button variant="secondary" onClick={() => notify("All activity marked as read")}><Check size={16} /> Mark all read</Button>} />
+    <div className="activity-summary"><div><Activity size={17} /><span>Events this week</span><strong>{events.length}</strong></div><div><Sparkles size={17} /><span>Analysis updates</span><strong>2</strong></div><div><Rocket size={17} /><span>Deployments</span><strong>1</strong></div></div>
+    <section className="activity-layout"><aside className="panel activity-filter"><p className="nav-label">Filter activity</p>{["All", "Analysis", "Deployments", "Changes"].map((item) => <button key={item} className={filter === item ? "active" : ""} onClick={() => setFilter(item)}><span>{item}</span><small>{item === "All" ? events.length : events.filter((event) => event.type === item).length}</small></button>)}</aside><div className="activity-timeline">{visibleEvents.map((event, index) => { const Icon = event.icon; return <article className="activity-event panel" key={event.id}><div className="activity-rail"><span className={`activity-icon activity-icon-${event.type.toLowerCase()}`}><Icon size={16} /></span>{index < visibleEvents.length - 1 ? <i /> : null}</div><div><div className="activity-event-meta"><Badge tone={event.type === "Deployments" ? "amber" : event.type === "Analysis" ? "violet" : "neutral"}>{event.type}</Badge><time>{event.time}</time></div><h2>{event.title}</h2><p>{event.detail}</p><button className="text-button" onClick={() => setActive(event.target)}>Open {event.target} <ArrowRight size={13} /></button></div></article>; })}</div></section>
   </div>;
 }
 
@@ -232,9 +291,11 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [toast, setToast] = useState("");
+  const [unreadActivity, setUnreadActivity] = useState(3);
   const notify = (message) => { setToast(message); setTimeout(() => setToast(""), 2600); };
+  const changeView = (view) => { setActive(view); if (view === "Activity") setUnreadActivity(0); };
   const requestConfirm = (state, action) => setConfirm({ ...state, actionHandler: action });
   const completeImport = (nextTwin) => { setTwin(nextTwin); setImportOpen(false); setActive("Overview"); notify(`${nextTwin.project.name} Project Twin is ready`); };
-  const pages = { Overview: <Overview twin={twin} setActive={setActive} />, Intelligence: <Intelligence twin={twin} />, Readiness: <Readiness twin={twin} />, Upgrades: <Upgrades twin={twin} notify={notify} />, Deploy: <Deploy requestConfirm={requestConfirm} notify={notify} />, Showcase: <Showcase twin={twin} requestConfirm={requestConfirm} notify={notify} /> };
-  return <div className="app-shell"><Sidebar active={active} onChange={setActive} onImport={() => setImportOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} /><div className="workspace"><Topbar twin={twin} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} /><main className="main-content">{pages[active]}</main></div><AskTwin twin={twin} open={askOpen} setOpen={setAskOpen} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
+  const pages = { Overview: <Overview twin={twin} setActive={changeView} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} />, Readiness: <Readiness twin={twin} />, Upgrades: <Upgrades twin={twin} notify={notify} />, Deploy: <Deploy requestConfirm={requestConfirm} notify={notify} />, Showcase: <Showcase twin={twin} requestConfirm={requestConfirm} notify={notify} /> };
+  return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} /><main className="main-content">{pages[active]}</main></div><AskTwin twin={twin} open={askOpen} setOpen={setAskOpen} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
 }
