@@ -1,9 +1,71 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @theme {
     --color-primary: #000000;
     --color-secondary: #ffffff;
     --font-sans: "Inter", "Poppins", sans-serif;
+}
+
+/* shadcn/ui design tokens, mapped onto the existing black-and-white palette
+   so Radix-backed components inherit the same look as the hand-written ones. */
+:root {
+    --radius: 0.75rem;
+
+    --background: #ffffff;
+    --foreground: #000000;
+
+    --card: #ffffff;
+    --card-foreground: #000000;
+
+    --popover: #ffffff;
+    --popover-foreground: #000000;
+
+    --primary: #000000;
+    --primary-foreground: #ffffff;
+
+    --secondary: #f9fafb;
+    --secondary-foreground: #000000;
+
+    --muted: #f9fafb;
+    --muted-foreground: #6b7280;
+
+    --accent: #f3f4f6;
+    --accent-foreground: #000000;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --border: #f3f4f6;
+    --input: #f3f4f6;
+    --ring: rgba(0, 0, 0, 0.05);
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary-solid: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary-surface: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
 }
 
 @layer base {

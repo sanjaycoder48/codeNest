@@ -1,4 +1,5 @@
 import { Component } from "react";
+import { Button } from "@/components/ui/button";
 
 // Without this, a render error unmounts the whole tree and the user gets a
 // white screen with no explanation and no way back.
@@ -26,9 +27,9 @@ class ErrorBoundary extends Component {
                     <p className="text-gray-500 mb-8">
                         The error has been logged to the console. Reloading usually clears it.
                     </p>
-                    <button className="btn-primary" onClick={() => window.location.assign("/")}>
+                    <Button onClick={() => window.location.assign("/")}>
                         Reload CodeNest
-                    </button>
+                    </Button>
                 </div>
             </div>
         );

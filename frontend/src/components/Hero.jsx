@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Code, Shield, Zap } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { Button } from "@/components/ui/button";
 
 const Hero = () => {
     const { isAuthenticated } = useAuth();
@@ -32,14 +33,14 @@ const Hero = () => {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <Link to={isAuthenticated ? "/dashboard" : "/register"}>
-                            <button className="btn-primary flex items-center gap-2">
+                            <Button>
                                 Start Building <ArrowRight size={20} />
-                            </button>
+                            </Button>
                         </Link>
                         <a href="#projects">
-                            <button className="btn-secondary">
+                            <Button variant="outline">
                                 View Showcase
-                            </button>
+                            </Button>
                         </a>
                     </div>
                 </motion.div>

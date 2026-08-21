@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { useAuth } from "../context/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -52,28 +55,28 @@ const Navbar = () => {
                             role="search"
                             className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-1.5 border border-transparent focus-within:border-black/10 focus-within:bg-white transition-all group"
                         >
-                            <label htmlFor="navbar-search" className="sr-only">Search projects</label>
+                            <Label htmlFor="navbar-search" className="sr-only">Search projects</Label>
                             <Search size={16} className="text-gray-400 group-focus-within:text-black" />
-                            <input
+                            <Input
                                 id="navbar-search"
                                 type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search..."
-                                className="bg-transparent border-none outline-none text-sm ml-2 w-32 focus:w-48 transition-all"
+                                className="bg-transparent border-none rounded-none px-0 py-0 text-sm ml-2 w-32 focus:w-48 focus:ring-0 transition-all"
                             />
                         </form>
 
                         <div className="flex items-center gap-3">
                             <Link to="/login">
-                                <button className="text-sm font-semibold px-5 py-2 hover:text-gray-600 transition-colors">
+                                <Button variant="nav" size="none">
                                     Login
-                                </button>
+                                </Button>
                             </Link>
                             <Link to="/register">
-                                <button className="text-sm font-semibold bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg active:scale-95">
+                                <Button size="none" className="text-sm px-6 py-2 shadow-md hover:shadow-lg hover:scale-100">
                                     Sign Up
-                                </button>
+                                </Button>
                             </Link>
                         </div>
                     </div>

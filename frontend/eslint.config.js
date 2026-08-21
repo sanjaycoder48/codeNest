@@ -36,4 +36,13 @@ export default defineConfig([
       'react/prop-types': 'off',
     },
   },
+  {
+    // shadcn/ui components export their cva variants alongside the component
+    // by convention. Keeping that shape means `shadcn add` upgrades apply
+    // cleanly, so the Fast Refresh rule is relaxed for this directory only.
+    files: ['src/components/ui/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

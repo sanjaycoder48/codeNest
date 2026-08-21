@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
     const { pathname } = useLocation();
@@ -22,12 +23,12 @@ const NotFound = () => {
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link to="/">
-                        <button className="btn-primary flex items-center gap-2">
+                        <Button>
                             <ArrowLeft size={18} /> Back home
-                        </button>
+                        </Button>
                     </Link>
                     <Link to="/dashboard">
-                        <button className="btn-secondary">Go to dashboard</button>
+                        <Button variant="outline">Go to dashboard</Button>
                     </Link>
                 </div>
             </div>

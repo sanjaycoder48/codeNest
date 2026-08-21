@@ -7,6 +7,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import api, { errorMessage } from "../lib/api";
 import { useAuth } from "../context/auth-context";
 import ProjectForm from "../components/ProjectForm";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+    AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader,
+    AlertDialogFooter, AlertDialogTitle, AlertDialogDescription,
+    AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const NAV_ITEMS = [
     { id: "dashboard", label: "Dashboard", icon: Layout },
@@ -68,8 +81,6 @@ const Dashboard = () => {
     };
 
     const handleDelete = async (project) => {
-        if (!window.confirm(`Delete "${project.title}"? This cannot be undone.`)) return;
-
         setDeletingId(project._id);
         try {
             await api.delete(`/api/projects/${project._id}`);
@@ -93,27 +104,30 @@ const Dashboard = () => {
 
                 <nav className="flex-1 space-y-2">
                     {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-                        <button
+                        <Button
                             key={id}
+                            variant="ghost"
+                            size="none"
                             onClick={() => setSection(id)}
                             aria-current={section === id ? "page" : undefined}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
-                                section === id
-                                    ? "bg-black text-white"
-                                    : "text-gray-500 hover:bg-gray-50"
-                            }`}
+                            className={cn(
+                                "w-full justify-start gap-3 px-4 py-3 font-medium",
+                                section === id && "bg-black text-white hover:bg-black hover:text-white"
+                            )}
                         >
                             <Icon size={20} /> {label}
-                        </button>
+                        </Button>
                     ))}
                 </nav>
 
-                <button
+                <Button
+                    variant="destructive"
+                    size="none"
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors mt-auto"
+                    className="justify-start gap-3 px-4 py-3 font-medium mt-auto"
                 >
                     <LogOut size={20} /> Logout
-                </button>
+                </Button>
             </aside>
 
             {/* Main Content */}
@@ -125,48 +139,45 @@ const Dashboard = () => {
                                 <h1 className="text-3xl font-bold">Your Projects</h1>
                                 <p className="text-gray-500">Manage and monitor your engineering nest.</p>
                             </div>
-                            <button
-                                onClick={() => setFormFor("new")}
-                                className="btn-primary flex items-center gap-2"
-                            >
+                            <Button onClick={() => setFormFor("new")}>
                                 <Plus size={20} /> New Project
-                            </button>
+                            </Button>
                         </header>
 
                         <div className="mb-10 max-w-md">
-                            <label htmlFor="project-search" className="sr-only">Search your projects</label>
-                            <div className="flex items-center bg-white rounded-xl px-4 py-2.5 border border-gray-200 focus-within:border-black/20 transition-colors">
-                                <Search size={18} className="text-gray-400" />
-                                <input
+                            <Label htmlFor="project-search" className="sr-only">Search your projects</Label>
+                            <div className="relative">
+                                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <Input
                                     id="project-search"
                                     type="search"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
                                     placeholder="Search by title, description or tech..."
-                                    className="bg-transparent border-none outline-none text-sm ml-3 w-full"
+                                    className="pl-11 bg-white border-gray-200 text-sm"
                                 />
                             </div>
                         </div>
 
                         {error && (
-                            <div role="alert" className="flex items-center gap-3 bg-red-50 text-red-600 p-4 rounded-xl mb-8">
+                            <Alert className="mb-8 p-4">
                                 <AlertCircle size={20} className="shrink-0" />
-                                <span className="text-sm">{error}</span>
-                            </div>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
                         )}
 
                         {status === "loading" && (
                             <div className="grid md:grid-cols-3 gap-8">
                                 {[0, 1, 2].map((i) => (
-                                    <div key={i} className="anti-gravity-card p-6 bg-white animate-pulse">
-                                        <div className="h-5 bg-gray-100 rounded w-2/3 mb-4" />
-                                        <div className="h-3 bg-gray-100 rounded w-full mb-2" />
-                                        <div className="h-3 bg-gray-100 rounded w-4/5 mb-6" />
+                                    <Card key={i} className="hover:translate-y-0 hover:shadow-lg">
+                                        <Skeleton className="h-5 w-2/3 mb-4" />
+                                        <Skeleton className="h-3 w-full mb-2" />
+                                        <Skeleton className="h-3 w-4/5 mb-6" />
                                         <div className="flex gap-2">
-                                            <div className="h-6 w-16 bg-gray-100 rounded-full" />
-                                            <div className="h-6 w-16 bg-gray-100 rounded-full" />
+                                            <Skeleton className="h-6 w-16 rounded-full" />
+                                            <Skeleton className="h-6 w-16 rounded-full" />
                                         </div>
-                                    </div>
+                                    </Card>
                                 ))}
                             </div>
                         )}
@@ -174,9 +185,9 @@ const Dashboard = () => {
                         {status === "error" && (
                             <div className="py-20 text-center glass-card border-dashed">
                                 <p className="text-gray-500 mb-6">We couldn&apos;t load your projects.</p>
-                                <button onClick={() => fetchProjects(query)} className="btn-secondary">
+                                <Button variant="outline" onClick={() => fetchProjects(query)}>
                                     Try again
-                                </button>
+                                </Button>
                             </div>
                         )}
 
@@ -187,21 +198,18 @@ const Dashboard = () => {
                                         <p className="text-gray-500 mb-6">
                                             No projects match &ldquo;{query}&rdquo;.
                                         </p>
-                                        <button onClick={() => setQuery("")} className="btn-secondary">
+                                        <Button variant="outline" onClick={() => setQuery("")}>
                                             Clear search
-                                        </button>
+                                        </Button>
                                     </>
                                 ) : (
                                     <>
                                         <p className="text-gray-500 mb-6">
                                             No projects yet. Create your first one to get started.
                                         </p>
-                                        <button
-                                            onClick={() => setFormFor("new")}
-                                            className="btn-primary inline-flex items-center gap-2"
-                                        >
+                                        <Button onClick={() => setFormFor("new")}>
                                             <Plus size={20} /> New Project
-                                        </button>
+                                        </Button>
                                     </>
                                 )}
                             </div>
@@ -210,43 +218,63 @@ const Dashboard = () => {
                         {status === "ready" && projects.length > 0 && (
                             <div className="grid md:grid-cols-3 gap-8">
                                 {projects.map((project) => (
-                                    <div key={project._id} className="anti-gravity-card p-6 bg-white flex flex-col">
-                                        <div className="flex items-start justify-between gap-3 mb-2">
-                                            <h3 className="text-xl font-bold">{project.title}</h3>
+                                    <Card key={project._id}>
+                                        <CardHeader>
+                                            <CardTitle>{project.title}</CardTitle>
                                             <div className="flex items-center gap-1 shrink-0">
-                                                <button
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
                                                     onClick={() => setFormFor(project)}
                                                     aria-label={`Edit ${project.title}`}
-                                                    className="p-2 text-gray-400 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+                                                    className="text-gray-400 hover:text-black"
                                                 >
                                                     <Pencil size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(project)}
-                                                    disabled={deletingId === project._id}
-                                                    aria-label={`Delete ${project.title}`}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                                                >
-                                                    {deletingId === project._id
-                                                        ? <Loader2 size={16} className="animate-spin" />
-                                                        : <Trash2 size={16} />}
-                                                </button>
+                                                </Button>
+
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            disabled={deletingId === project._id}
+                                                            aria-label={`Delete ${project.title}`}
+                                                            className="text-gray-400 hover:text-red-500 hover:bg-red-50"
+                                                        >
+                                                            {deletingId === project._id
+                                                                ? <Loader2 size={16} className="animate-spin" />
+                                                                : <Trash2 size={16} />}
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                &ldquo;{project.title}&rdquo; will be permanently removed.
+                                                                This cannot be undone.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogAction onClick={() => handleDelete(project)}>
+                                                                Delete project
+                                                            </AlertDialogAction>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
-                                        </div>
+                                        </CardHeader>
 
-                                        <p className="text-gray-500 text-sm mb-6 flex-1">{project.description}</p>
+                                        <CardContent>
+                                            <CardDescription className="mb-6">{project.description}</CardDescription>
+                                        </CardContent>
 
-                                        <div className="flex flex-wrap gap-2">
+                                        <CardFooter>
                                             {(project.techStack ?? []).map((tech, i) => (
-                                                <span
-                                                    key={`${tech}-${i}`}
-                                                    className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold uppercase"
-                                                >
-                                                    {tech}
-                                                </span>
+                                                <Badge key={`${tech}-${i}`}>{tech}</Badge>
                                             ))}
-                                        </div>
-                                    </div>
+                                        </CardFooter>
+                                    </Card>
                                 ))}
                             </div>
                         )}
@@ -257,20 +285,20 @@ const Dashboard = () => {
                             {NAV_ITEMS.find((n) => n.id === section)?.label}
                         </h1>
                         <p className="text-gray-500 mb-8">This section isn&apos;t built yet.</p>
-                        <button onClick={() => setSection("dashboard")} className="btn-secondary">
+                        <Button variant="outline" onClick={() => setSection("dashboard")}>
                             Back to projects
-                        </button>
+                        </Button>
                     </div>
                 )}
             </main>
 
-            {formFor && (
-                <ProjectForm
-                    project={formFor === "new" ? null : formFor}
-                    onClose={() => setFormFor(null)}
-                    onSaved={handleSaved}
-                />
-            )}
+            <ProjectForm
+                key={formFor === "new" ? "new" : formFor?._id}
+                project={formFor === "new" ? null : formFor}
+                open={Boolean(formFor)}
+                onOpenChange={(open) => !open && setFormFor(null)}
+                onSaved={handleSaved}
+            />
         </div>
     );
 };

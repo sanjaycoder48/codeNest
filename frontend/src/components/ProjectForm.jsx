@@ -1,23 +1,29 @@
-import { useEffect, useState } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import api, { errorMessage } from "../lib/api";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Handles both create and edit — an existing `project` switches it to edit mode.
-const ProjectForm = ({ project, onClose, onSaved }) => {
+const ProjectForm = ({ project, open, onOpenChange, onSaved }) => {
     const isEdit = Boolean(project);
     const [title, setTitle] = useState(project?.title ?? "");
     const [description, setDescription] = useState(project?.description ?? "");
     const [techStack, setTechStack] = useState((project?.techStack ?? []).join(", "));
     const [error, setError] = useState("");
     const [saving, setSaving] = useState(false);
-
-    useEffect(() => {
-        const onKeyDown = (e) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [onClose]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,54 +54,29 @@ const ProjectForm = ({ project, onClose, onSaved }) => {
     };
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-6"
-            onClick={onClose}
-        >
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="project-form-title"
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="flex items-start justify-between mb-6">
-                    <div>
-                        <h2 id="project-form-title" className="text-2xl font-bold">
-                            {isEdit ? "Edit project" : "New project"}
-                        </h2>
-                        <p className="text-gray-500 text-sm mt-1">
-                            {isEdit ? "Update the details below." : "Add a project to your nest."}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        aria-label="Close"
-                        className="p-2 -mr-2 -mt-1 text-gray-400 hover:text-black rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{isEdit ? "Edit project" : "New project"}</DialogTitle>
+                    <DialogDescription>
+                        {isEdit ? "Update the details below." : "Add a project to your nest."}
+                    </DialogDescription>
+                </DialogHeader>
 
                 {error && (
-                    <div role="alert" className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">
-                        {error}
-                    </div>
+                    <Alert className="mb-6">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label htmlFor="project-title" className="block text-sm font-bold mb-2">
-                            Title
-                        </label>
-                        <input
+                        <Label htmlFor="project-title">Title</Label>
+                        <Input
                             id="project-title"
-                            type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             maxLength={120}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                             placeholder="CloudSync Pro"
                             required
                             autoFocus
@@ -103,16 +84,13 @@ const ProjectForm = ({ project, onClose, onSaved }) => {
                     </div>
 
                     <div>
-                        <label htmlFor="project-description" className="block text-sm font-bold mb-2">
-                            Description
-                        </label>
-                        <textarea
+                        <Label htmlFor="project-description">Description</Label>
+                        <Textarea
                             id="project-description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             maxLength={2000}
                             rows={4}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all resize-y"
                             placeholder="What does it do, and who is it for?"
                             required
                         />
@@ -120,36 +98,30 @@ const ProjectForm = ({ project, onClose, onSaved }) => {
                     </div>
 
                     <div>
-                        <label htmlFor="project-tech" className="block text-sm font-bold mb-2">
-                            Tech stack
-                        </label>
-                        <input
+                        <Label htmlFor="project-tech">Tech stack</Label>
+                        <Input
                             id="project-tech"
-                            type="text"
                             value={techStack}
                             onChange={(e) => setTechStack(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                             placeholder="React, Node, MongoDB"
                         />
                         <p className="text-xs text-gray-400 mt-2">Separate with commas.</p>
                     </div>
 
-                    <div className="flex items-center gap-3 pt-2">
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="btn-primary flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
+                    <DialogFooter>
+                        <Button type="submit" size="sm" disabled={saving}>
                             {saving && <Loader2 size={18} className="animate-spin" />}
                             {saving ? "Saving" : isEdit ? "Save changes" : "Create project"}
-                        </button>
-                        <button type="button" onClick={onClose} className="btn-secondary">
-                            Cancel
-                        </button>
-                    </div>
+                        </Button>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline" size="sm">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                    </DialogFooter>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 };
 

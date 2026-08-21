@@ -3,6 +3,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Lock, Mail, Loader2 } from "lucide-react";
 import api, { errorMessage } from "../lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "../context/auth-context";
 
 const Login = () => {
@@ -49,24 +53,24 @@ const Login = () => {
                 </div>
 
                 {error && (
-                    <div role="alert" className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">
-                        {error}
-                    </div>
+                    <Alert className="mb-6">
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label htmlFor="login-email" className="block text-sm font-bold mb-2">Email Address</label>
+                        <Label htmlFor="login-email">Email Address</Label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
+                            <Input
                                 id="login-email"
                                 name="email"
                                 type="email"
                                 autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
+                                className="pl-10"
                                 placeholder="name@company.com"
                                 required
                             />
@@ -74,34 +78,30 @@ const Login = () => {
                     </div>
 
                     <div>
-                        <label htmlFor="login-password" className="block text-sm font-bold mb-2">Password</label>
+                        <Label htmlFor="login-password">Password</Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <input
+                            <Input
                                 id="login-password"
                                 name="password"
                                 type="password"
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
+                                className="pl-10"
                                 placeholder="••••••••"
                                 required
                             />
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
+                    <Button type="submit" disabled={submitting} className="w-full">
                         {submitting ? (
                             <>Signing in <Loader2 size={18} className="animate-spin" /></>
                         ) : (
                             <>Sign In <ArrowRight size={18} /></>
                         )}
-                    </button>
+                    </Button>
                 </form>
 
                 <p className="text-center mt-8 text-sm text-gray-500">
