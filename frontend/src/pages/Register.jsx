@@ -1,21 +1,40 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, User, Mail, Lock } from "lucide-react";
-import axios from "axios";
+import { ArrowRight, User, Mail, Lock, Loader2 } from "lucide-react";
+import api, { errorMessage } from "../lib/api";
+import { useAuth } from "../context/auth-context";
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
     const [error, setError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const setField = (field) => (e) =>
+        setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitting) return;
+
+        setError("");
+        if (formData.password.length < 8) {
+            setError("Password must be at least 8 characters.");
+            return;
+        }
+
+        setSubmitting(true);
         try {
-            await axios.post("http://localhost:5000/api/auth/register", formData);
-            navigate("/login");
+            const res = await api.post("/api/auth/register", formData);
+            // The API signs the new user in, so skip the trip through the login form.
+            login(res.data.token, res.data.user);
+            navigate("/dashboard", { replace: true });
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
+            setError(errorMessage(err, "Registration failed"));
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -32,16 +51,24 @@ const Register = () => {
                     <p className="text-gray-500 text-sm mt-2">Join the elite community of developers.</p>
                 </div>
 
-                {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">{error}</div>}
+                {error && (
+                    <div role="alert" className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-bold mb-2">Full Name</label>
+                        <label htmlFor="register-name" className="block text-sm font-bold mb-2">Full Name</label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
+                                id="register-name"
+                                name="name"
                                 type="text"
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                autoComplete="name"
+                                value={formData.name}
+                                onChange={setField("name")}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="John Doe"
                                 required
@@ -50,12 +77,16 @@ const Register = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold mb-2">Email Address</label>
+                        <label htmlFor="register-email" className="block text-sm font-bold mb-2">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
+                                id="register-email"
+                                name="email"
                                 type="email"
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                autoComplete="email"
+                                value={formData.email}
+                                onChange={setField("email")}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="name@company.com"
                                 required
@@ -64,21 +95,35 @@ const Register = () => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-bold mb-2">Password</label>
+                        <label htmlFor="register-password" className="block text-sm font-bold mb-2">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                             <input
+                                id="register-password"
+                                name="password"
                                 type="password"
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                autoComplete="new-password"
+                                minLength={8}
+                                value={formData.password}
+                                onChange={setField("password")}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="••••••••"
                                 required
                             />
                         </div>
+                        <p className="text-xs text-gray-400 mt-2">At least 8 characters.</p>
                     </div>
 
-                    <button type="submit" className="w-full btn-primary flex items-center justify-center gap-2">
-                        Sign Up <ArrowRight size={18} />
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                        {submitting ? (
+                            <>Creating account <Loader2 size={18} className="animate-spin" /></>
+                        ) : (
+                            <>Sign Up <ArrowRight size={18} /></>
+                        )}
                     </button>
                 </form>
 

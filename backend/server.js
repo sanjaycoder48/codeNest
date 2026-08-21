@@ -1,30 +1,40 @@
-const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const app = express();
+// Fail loudly at startup rather than silently signing tokens with a guessable key.
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET is not set. Copy .env.example to .env and fill it in.');
+    process.exit(1);
+}
+
+// Reject query operators ($gt, $ne, ...) arriving from request bodies.
+mongoose.set('sanitizeFilter', true);
+
+const app = require('./app');
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/projects', require('./routes/projects'));
-
-// Basic Route
-app.get('/', (req, res) => {
-    res.send('CodeNest API Running...');
-});
-
-// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/codenest')
     .then(() => {
         console.log('MongoDB Connected');
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+        const shutdown = async (signal) => {
+            console.log(`\n${signal} received, shutting down.`);
+            server.close(async () => {
+                await mongoose.connection.close();
+                process.exit(0);
+            });
+        };
+        process.on('SIGINT', () => shutdown('SIGINT'));
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+        // Exit non-zero so a process manager restarts us instead of leaving a
+        // "healthy" process bound to nothing.
+        console.error('MongoDB connection failed:', err.message);
+        process.exit(1);
+    });
+
+mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'));

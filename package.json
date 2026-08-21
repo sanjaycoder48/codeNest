@@ -5,9 +5,14 @@
         "start:frontend": "cd frontend && npm run dev",
         "start:backend": "cd backend && npm run dev",
         "install:all": "cd frontend && npm install && cd ../backend && npm install",
-        "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+        "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+        "test": "cd backend && npm test",
+        "lint": "cd frontend && npm run lint",
+        "build": "cd frontend && npm run build"
     },
     "devDependencies": {
         "concurrently": "^8.2.2"
-    }
+    },
+    "license": "MIT",
+    "description": "CodeNest - a developer hub for publishing and organising engineering projects"
 }

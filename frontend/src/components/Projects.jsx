@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const projects = [
@@ -25,7 +26,7 @@ const projects = [
 
 const Projects = () => {
     return (
-        <section className="py-32 bg-gray-50/50 px-6">
+        <section id="projects" className="py-32 bg-gray-50/50 px-6 scroll-mt-24">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8 text-left">
                     <div className="md:w-1/2">
@@ -34,15 +35,18 @@ const Projects = () => {
                             Explore the innovative solutions built by developers using CodeNest.
                         </p>
                     </div>
-                    <button className="text-sm font-bold border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-all">
+                    <Link
+                        to="/dashboard"
+                        className="text-sm font-bold border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition-all self-start"
+                    >
                         View All Projects
-                    </button>
+                    </Link>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
                     {projects.map((project, index) => (
                         <motion.div
-                            key={index}
+                            key={project.title}
                             initial={{ opacity: 0, scale: 0.95 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.1, duration: 0.6 }}
@@ -53,6 +57,10 @@ const Projects = () => {
                                 <img
                                     src={project.image}
                                     alt={project.title}
+                                    width={800}
+                                    height={450}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
                             </div>

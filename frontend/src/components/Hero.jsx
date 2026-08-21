@@ -1,7 +1,11 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Code, Shield, Zap } from "lucide-react";
+import { useAuth } from "../context/auth-context";
 
 const Hero = () => {
+    const { isAuthenticated } = useAuth();
+
     return (
         <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-white">
             {/* Background Floating Elements */}
@@ -27,12 +31,16 @@ const Hero = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <button className="btn-primary flex items-center gap-2">
-                            Start Building <ArrowRight size={20} />
-                        </button>
-                        <button className="btn-secondary">
-                            View Showcase
-                        </button>
+                        <Link to={isAuthenticated ? "/dashboard" : "/register"}>
+                            <button className="btn-primary flex items-center gap-2">
+                                {isAuthenticated ? "Go to your nest" : "Start Building"} <ArrowRight size={20} />
+                            </button>
+                        </Link>
+                        <a href="#projects">
+                            <button className="btn-secondary">
+                                View Showcase
+                            </button>
+                        </a>
                     </div>
                 </motion.div>
 
@@ -64,8 +72,8 @@ const Hero = () => {
                                 <div className="w-12 h-12 border-2 border-black rounded-lg flex items-center justify-center mb-6">
                                     <Shield size={24} />
                                 </div>
-                                <h3 className="text-xl font-bold mb-4">Bank-Grade Security</h3>
-                                <p className="text-gray-500 text-sm mb-6">Your data is safe with our advanced encryption and role-based access control.</p>
+                                <h3 className="text-xl font-bold mb-4">Secure by Default</h3>
+                                <p className="text-gray-500 text-sm mb-6">Passwords hashed with bcrypt, signed sessions, and every project scoped to its owner.</p>
                                 <div className="flex gap-2">
                                     {[1, 2, 3, 4].map(i => <div key={i} className="h-2 w-8 bg-black/10 rounded-full" />)}
                                 </div>
