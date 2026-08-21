@@ -98,6 +98,40 @@ Express backend to be deployed separately and its public URL supplied as the
 frontend `VITE_API_URL` build variable. When you do that, add the Pages origin
 to the backend `CLIENT_URL` allowlist or the browser will block the requests.
 
+## Deploying the backend
+
+The frontend on Pages is static. Server-side analysis, accounts and saved
+projects need the API deployed somewhere that runs Node.
+
+```bash
+docker build -t project-twin-api ./backend
+docker run -p 5000:5000 --env-file backend/.env project-twin-api
+```
+
+The image installs production dependencies only, runs as a non-root user, and
+declares a healthcheck against `/health`. On Render, Railway or Fly, point the
+platform at `backend/Dockerfile` and set:
+
+| Setting | Value |
+| --- | --- |
+| `JWT_SECRET` | a fresh 48-byte random value |
+| `CLIENT_URL` | `https://sanjaycoder48.github.io` (plus any other origins) |
+| `TRUST_PROXY` | `1` — these platforms terminate TLS at a proxy |
+| `GITHUB_TOKEN` | optional, raises the GitHub rate limit |
+| `MONGO_URI` | optional, only for accounts and saved projects |
+
+Then rebuild the frontend with `VITE_API_URL` pointing at the deployed API.
+Without `TRUST_PROXY`, every request appears to come from the proxy and all
+clients share a single rate-limit bucket.
+
+### Known limits before real traffic
+
+- Analysis jobs live in memory, bounded by `ANALYSIS_MAX_JOBS` and
+  `ANALYSIS_JOB_TTL_MS`. They do not survive a restart, and with more than one
+  instance a polling client can hit a replica that never saw the job. Running a
+  single instance is fine; scaling out needs a shared store.
+- There is no error-tracking integration. Failures are logged to stdout only.
+
 ## Architecture
 
 ```text

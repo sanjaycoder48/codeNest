@@ -20,23 +20,60 @@ const FRAMEWORK_SIGNALS = {
     mysql2: 'MySQL', redis: 'Redis', '@supabase/supabase-js': 'Supabase'
 };
 
+// GitHub's own rules: owners are alphanumeric with single hyphens (max 39);
+// repository names allow dot, underscore and hyphen (max 100).
+const OWNER_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
+const REPO_PATTERN = /^[A-Za-z0-9._-]{1,100}$/;
+
 function parseRepository(input) {
     const normalized = String(input || '').trim().replace(/\.git$/, '').replace(/\/$/, '');
     const match = normalized.match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)$/i);
     if (!match) throw new Error('Enter a GitHub repository as owner/name or a GitHub URL.');
-    return { owner: match[1], repo: match[2] };
+
+    const [, owner, repo] = match;
+
+    // Without this, an owner of ".." makes the request URL collapse under path
+    // normalisation: /repos/../user becomes /user, which would send the
+    // server's GitHub token to an endpoint the caller chose.
+    if (!OWNER_PATTERN.test(owner) || !REPO_PATTERN.test(repo) || repo === '.' || repo === '..') {
+        throw new Error('Enter a GitHub repository as owner/name or a GitHub URL.');
+    }
+
+    return { owner, repo };
 }
 
+const GITHUB_API = 'https://api.github.com';
+const REQUEST_TIMEOUT_MS = Number(process.env.GITHUB_TIMEOUT_MS) || 15000;
+const MAX_BLOB_BYTES = 256 * 1024;
+
 async function githubRequest(url, token) {
-    const response = await fetch(url, {
+    // Defence in depth: parseRepository already rejects traversal, but a bug
+    // anywhere upstream must not be able to redirect an authenticated request.
+    const target = new URL(url);
+    if (target.origin !== GITHUB_API) {
+        throw new Error('Refusing to send an authenticated request off github.com.');
+    }
+
+    // Without a timeout a stalled connection pins the job forever.
+    const response = await fetch(target, {
+        redirect: 'error',
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         headers: {
             Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
             'User-Agent': 'project-twin-analyzer',
             ...(token ? { Authorization: `Bearer ${token}` } : {})
         }
+    }).catch((err) => {
+        if (err.name === 'TimeoutError') throw new Error('GitHub did not respond in time.');
+        throw new Error('Could not reach GitHub.');
     });
 
     if (!response.ok) {
+        // Rate limiting is the failure people actually hit; say so plainly.
+        if (response.status === 403 && response.headers.get('x-ratelimit-remaining') === '0') {
+            throw new Error('GitHub API rate limit reached. Try again shortly or configure GITHUB_TOKEN.');
+        }
         const message = response.status === 404
             ? 'Repository not found or it is private.'
             : `GitHub returned ${response.status} while reading the repository.`;
@@ -86,9 +123,15 @@ async function fetchEvidence(owner, repo, files, token) {
     const workers = Array.from({ length: 6 }, async () => {
         while (cursor < files.length) {
             const file = files[cursor++];
-            const blob = await githubRequest(`https://api.github.com/repos/${owner}/${repo}/git/blobs/${file.sha}`, token);
+            // A single generated or vendored file can be tens of megabytes;
+            // reading them all into one object is how this runs out of memory.
+            if (file.size && file.size > MAX_BLOB_BYTES) continue;
+
+            const blob = await githubRequest(`${GITHUB_API}/repos/${owner}/${repo}/git/blobs/${file.sha}`, token);
             if (blob.encoding === 'base64') {
-                evidence[file.path] = Buffer.from(blob.content, 'base64').toString('utf8');
+                evidence[file.path] = Buffer.from(blob.content, 'base64')
+                    .toString('utf8')
+                    .slice(0, MAX_BLOB_BYTES);
             }
         }
     });
@@ -233,8 +276,8 @@ function architectureFrom(frameworks, dependencies) {
 async function analyzeRepository(input, options = {}) {
     const { owner, repo } = parseRepository(input);
     const token = options.token || process.env.GITHUB_TOKEN;
-    const metadata = await githubRequest(`https://api.github.com/repos/${owner}/${repo}`, token);
-    const tree = await githubRequest(`https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`, token);
+    const metadata = await githubRequest(`${GITHUB_API}/repos/${owner}/${repo}`, token);
+    const tree = await githubRequest(`${GITHUB_API}/repos/${owner}/${repo}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`, token);
     if (tree.truncated) throw new Error('This repository is too large for the current analysis limit.');
 
     const classified = classifyFiles(tree.tree || []);
