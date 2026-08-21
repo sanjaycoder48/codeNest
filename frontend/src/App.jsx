@@ -71,6 +71,36 @@ function buildAIInsight(twin, type) {
   return insights[type] || insights.architecture;
 }
 
+const SHOWCASE_DRAFT_KEY = "codenest:showcase-drafts";
+const TAGLINE_MAX = 90;
+const DESCRIPTION_MAX = 320;
+
+const defaultShowcaseCopy = (twin) => ({
+  tagline: `${twin.features[0] || twin.project.name}, made clear and launch-ready.`,
+  description: twin.project.description,
+});
+
+const defaultSections = () => ({
+  Features: true, Technology: true, Architecture: true,
+  "Technical highlights": true, "Ask this project": true,
+});
+
+// Drafts are keyed by project, so switching twins in the gallery and coming
+// back does not lose what you wrote. Storage can be unavailable (private mode,
+// disabled cookies), so every access is guarded.
+function readShowcaseDrafts() {
+  try { return JSON.parse(localStorage.getItem(SHOWCASE_DRAFT_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function writeShowcaseDraft(id, draft) {
+  try {
+    const all = readShowcaseDrafts();
+    all[id] = draft;
+    localStorage.setItem(SHOWCASE_DRAFT_KEY, JSON.stringify(all));
+  } catch { /* storage unavailable; the draft simply stays in memory */ }
+}
+
 // 228000 -> "228k". Raw six-digit counts are noise in a card footer.
 function formatCount(value) {
   if (typeof value !== "number" || !Number.isFinite(value)) return "—";
@@ -422,14 +452,28 @@ function Deploy({ twin, requestConfirm, notify, onAI }) {
 }
 
 function Showcase({ twin, requestConfirm, notify, onAsk, onSelectTwin }) {
-  const initialTagline = `${twin.features[0] || twin.project.name}, made clear and launch-ready.`;
   const [editing, setEditing] = useState(true);
-  const [copy, setCopy] = useState({ tagline: initialTagline, description: twin.project.description });
-  const [included, setIncluded] = useState({ Features: true, Technology: true, Architecture: true, "Technical highlights": true, "Ask this project": true });
+  const [copy, setCopy] = useState(() => readShowcaseDrafts()[twin.id]?.copy || defaultShowcaseCopy(twin));
+  const [included, setIncluded] = useState(() => readShowcaseDrafts()[twin.id]?.included || defaultSections());
   const [published, setPublished] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [narrativeVersion, setNarrativeVersion] = useState(0);
+
+  // State is reset by remounting on twin.id (see the key where Showcase is
+  // rendered) rather than by syncing inside an effect.
+  useEffect(() => { writeShowcaseDraft(twin.id, { copy, included }); }, [twin.id, copy, included]);
+
   const toggleSection = (item) => setIncluded((current) => ({ ...current, [item]: !current[item] }));
+  const sectionNames = Object.keys(included);
+  const shownCount = sectionNames.filter((name) => included[name]).length;
+  const allShown = shownCount === sectionNames.length;
+  const setAllSections = (value) => setIncluded(Object.fromEntries(sectionNames.map((name) => [name, value])));
+  const resetDraft = () => {
+    setCopy(defaultShowcaseCopy(twin));
+    setIncluded(defaultSections());
+    setNarrativeVersion(0);
+    notify("Case study reset to the generated version");
+  };
   const refineWithAI = () => {
     const variants = [
       { tagline: `${twin.features.slice(0, 2).join(" and ") || twin.project.name}, engineered for confident delivery.`, description: `${twin.project.name} brings ${twin.features.slice(0, 3).join(", ").toLowerCase() || "its verified project capabilities"} into one product. Built with ${twin.frameworks.slice(0, 3).join(", ") || "the detected repository stack"}, its Project Twin verifies ${twin.summary.components} components and ${twin.summary.apiRoutes} API routes.` },
@@ -502,7 +546,63 @@ function Showcase({ twin, requestConfirm, notify, onAsk, onSelectTwin }) {
       </div>
     </section>
     <div className="showcase-layout">
-      <section className="panel showcase-editor"><Button variant="secondary" onClick={refineWithAI} disabled={generating}>{generating ? <LoaderCircle className="spin" size={16} /> : <WandSparkles size={16} />} {generating ? "Writing from evidence" : "Refine narrative with AI"}</Button><label>Tagline<input value={copy.tagline} onChange={(event) => setCopy({ ...copy, tagline: event.target.value })} disabled={!editing} /></label><label>Description<textarea rows="5" value={copy.description} onChange={(event) => setCopy({ ...copy, description: event.target.value })} disabled={!editing} /></label><div><span className="field-label">Included sections</span>{Object.keys(included).map((item) => <label className="check-row" key={item}><input type="checkbox" checked={included[item]} onChange={() => toggleSection(item)} /><span><Check size={13} /></span>{item}</label>)}</div>{published ? <Button variant="secondary" onClick={copyLink}><Link size={16} /> Copy public link</Button> : <Button onClick={publish}><Globe2 size={16} /> Publish showcase</Button>}</section>
+      <section className="panel showcase-editor">
+        <div className="editor-intro">
+          <p className="eyebrow">Case study editor</p>
+          <p>Write the public summary for this project and choose which verified sections appear in the page on the right.</p>
+        </div>
+
+        <Button variant="secondary" onClick={refineWithAI} disabled={generating || !editing}>
+          {generating ? <LoaderCircle className="spin" size={16} /> : <WandSparkles size={16} />}
+          {generating ? "Writing from evidence" : "Refine narrative with AI"}
+        </Button>
+
+        <label>
+          <span className="label-row">Tagline <small className={copy.tagline.length > TAGLINE_MAX ? "over" : ""}>{copy.tagline.length}/{TAGLINE_MAX}</small></span>
+          <input
+            value={copy.tagline}
+            maxLength={TAGLINE_MAX}
+            onChange={(event) => setCopy({ ...copy, tagline: event.target.value })}
+            disabled={!editing}
+          />
+        </label>
+
+        <label>
+          <span className="label-row">Description <small className={copy.description.length > DESCRIPTION_MAX ? "over" : ""}>{copy.description.length}/{DESCRIPTION_MAX}</small></span>
+          <textarea
+            rows="5"
+            value={copy.description}
+            maxLength={DESCRIPTION_MAX}
+            onChange={(event) => setCopy({ ...copy, description: event.target.value })}
+            disabled={!editing}
+          />
+        </label>
+
+        <div>
+          <span className="label-row field-label">
+            Included sections
+            <button type="button" className="text-button" onClick={() => setAllSections(!allShown)} disabled={!editing}>
+              {allShown ? "Clear all" : "Select all"}
+            </button>
+          </span>
+          {sectionNames.map((item) => (
+            <label className="check-row" key={item}>
+              <input type="checkbox" checked={included[item]} onChange={() => toggleSection(item)} disabled={!editing} />
+              <span><Check size={13} /></span>
+              {item}
+            </label>
+          ))}
+          <p className="editor-hint">{shownCount} of {sectionNames.length} sections shown</p>
+        </div>
+
+        <div className="editor-actions">
+          {published
+            ? <Button variant="secondary" onClick={copyLink}><Link size={16} /> Copy public link</Button>
+            : <Button onClick={publish}><Globe2 size={16} /> Publish showcase</Button>}
+          <Button variant="ghost" onClick={resetDraft} disabled={!editing}>Reset</Button>
+        </div>
+        <p className="editor-hint">Edits are saved on this device as you type.</p>
+      </section>
       <section className="showcase-preview"><div className="showcase-browser"><div className="browser-bar"><span /><span /><span /><small>{published ? `${window.location.host}/showcase/${twin.project.name.toLowerCase()}` : `preview/${twin.project.name.toLowerCase()}`}</small></div><div className="case-study"><Badge tone="green">{published ? "Published" : "Live project"}</Badge><h2>{twin.project.name}</h2><h3>{copy.tagline}</h3><p>{copy.description}</p><div className="case-actions"><Button onClick={() => window.open(window.location.href, "_blank", "noopener,noreferrer")}>Open live app <ExternalLink size={15} /></Button><Button variant="ghost" onClick={() => window.open(twin.project.repositoryUrl, "_blank", "noopener,noreferrer")}><Github size={15} /> Repository</Button></div>{included.Technology ? <><div className="case-divider" /><p className="eyebrow">Built with</p><div className="stack-row">{twin.frameworks.map((item) => <Badge key={item}>{item}</Badge>)}</div></> : null}{included.Architecture ? <div className="case-architecture">{twin.architecture.nodes.map((node, index) => <span key={node.id}>{index > 0 ? <ArrowRight size={13} /> : null}<strong>{node.label}</strong></span>)}</div> : null}{included.Features ? <div className="case-features">{twin.features.slice(0, 3).map((item) => <div key={item}><CheckCircle2 size={16} /><span>{item}</span></div>)}</div> : null}{included["Technical highlights"] ? <div className="case-highlights"><div><strong>{twin.summary.components}</strong><span>Components</span></div><div><strong>{twin.summary.apiRoutes}</strong><span>API routes</span></div><div><strong>{twin.readiness.score}/100</strong><span>Readiness</span></div></div> : null}{included["Ask this project"] ? <button className="case-ask" onClick={onAsk}><Sparkles size={15} /> Ask this project <ArrowRight size={14} /></button> : null}</div></div></section>
     </div>
   </div>;
@@ -583,6 +683,6 @@ export default function App() {
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
-  const pages = { Overview: <Overview twin={twin} setActive={changeView} onAI={openAI} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} onAI={openAI} />, Readiness: <Readiness twin={twin} onAI={openAI} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy twin={twin} requestConfirm={requestConfirm} notify={notify} onAI={openAI} />, Showcase: <Showcase twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} onSelectTwin={setTwin} /> };
+  const pages = { Overview: <Overview twin={twin} setActive={changeView} onAI={openAI} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} onAI={openAI} />, Readiness: <Readiness twin={twin} onAI={openAI} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy twin={twin} requestConfirm={requestConfirm} notify={notify} onAI={openAI} />, Showcase: <Showcase key={twin.id} twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} onSelectTwin={setTwin} /> };
   return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onSelectTwin={setTwin} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} /><main className="main-content">{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<AIInsightDialog insight={aiInsight} onClose={() => setAIInsight(null)} onNavigate={changeView} onAsk={() => setAskOpen(true)} /><SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
 }
