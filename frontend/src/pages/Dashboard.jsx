@@ -27,7 +27,7 @@ const Dashboard = () => {
     const query = searchParams.get("q") ?? "";
 
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
 
     const fetchProjects = useCallback(async (q) => {
         setStatus("loading");
@@ -108,16 +108,9 @@ const Dashboard = () => {
                     ))}
                 </nav>
 
-                {user && (
-                    <div className="mb-4 px-4 py-3 bg-gray-50 rounded-xl">
-                        <p className="text-sm font-bold truncate">{user.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                    </div>
-                )}
-
                 <button
                     onClick={handleLogout}
-                    className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl font-medium transition-colors mt-auto"
                 >
                     <LogOut size={20} /> Logout
                 </button>

@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, LayoutDashboard } from "lucide-react";
+import { Search } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 
 const Navbar = () => {
@@ -10,7 +10,9 @@ const Navbar = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
@@ -19,7 +21,6 @@ const Navbar = () => {
         e.preventDefault();
         const q = query.trim();
         if (!q) return;
-        // Search runs against the signed-in user's projects; send guests to log in first.
         navigate(isAuthenticated ? `/dashboard?q=${encodeURIComponent(q)}` : "/login");
     };
 
@@ -39,9 +40,9 @@ const Navbar = () => {
                         </Link>
 
                         <div className="hidden md:flex items-center gap-8">
-                            <a href="#features" className="text-sm font-medium hover:text-gray-500 transition-colors">Features</a>
-                            <a href="#projects" className="text-sm font-medium hover:text-gray-500 transition-colors">Projects</a>
-                            <Link to="/dashboard" className="text-sm font-medium hover:text-gray-500 transition-colors">Dashboard</Link>
+                            <Link to="/explore" className="text-sm font-medium hover:text-gray-500 transition-colors">Explore</Link>
+                            <Link to="/about" className="text-sm font-medium hover:text-gray-500 transition-colors">About</Link>
+                            <Link to="/community" className="text-sm font-medium hover:text-gray-500 transition-colors">Community</Link>
                         </div>
                     </div>
 
@@ -55,7 +56,7 @@ const Navbar = () => {
                             <Search size={16} className="text-gray-400 group-focus-within:text-black" />
                             <input
                                 id="navbar-search"
-                                type="search"
+                                type="text"
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search..."
@@ -64,26 +65,16 @@ const Navbar = () => {
                         </form>
 
                         <div className="flex items-center gap-3">
-                            {isAuthenticated ? (
-                                <Link to="/dashboard">
-                                    <button className="text-sm font-semibold bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2">
-                                        <LayoutDashboard size={16} /> Dashboard
-                                    </button>
-                                </Link>
-                            ) : (
-                                <>
-                                    <Link to="/login">
-                                        <button className="text-sm font-semibold px-5 py-2 hover:text-gray-600 transition-colors">
-                                            Login
-                                        </button>
-                                    </Link>
-                                    <Link to="/register">
-                                        <button className="text-sm font-semibold bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg active:scale-95">
-                                            Sign Up
-                                        </button>
-                                    </Link>
-                                </>
-                            )}
+                            <Link to="/login">
+                                <button className="text-sm font-semibold px-5 py-2 hover:text-gray-600 transition-colors">
+                                    Login
+                                </button>
+                            </Link>
+                            <Link to="/register">
+                                <button className="text-sm font-semibold bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg active:scale-95">
+                                    Sign Up
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

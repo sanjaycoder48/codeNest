@@ -104,7 +104,7 @@ router.patch('/:id', auth, validId, async (req, res, next) => {
                 description: req.body.description,
                 techStack: normaliseTechStack(req.body.techStack)
             },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!project) return res.status(404).json({ message: 'Project not found' });
         res.json(project);
