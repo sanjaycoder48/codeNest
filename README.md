@@ -1,53 +1,71 @@
-# React + Vite + Tailwind CSS
+# Project Twin
 
-This project is set up with React, Vite, and Tailwind CSS for modern web development.
+Project Twin turns a GitHub repository into a living, evidence-grounded model of the project. It classifies repository files, extracts deterministic metadata, builds architecture context, scores production readiness, recommends contextual improvements, diagnoses deployment configuration failures, and generates an editable public showcase.
 
-## 🚀 Tech Stack
+## What works
 
-- **React 19.2.0** - A JavaScript library for building user interfaces
-- **Vite 7.3.1** - Next generation frontend tooling
-- **Tailwind CSS 4.1.18** - A utility-first CSS framework
-- **ESLint** - Code linting and quality
+- Asynchronous public GitHub repository import and analysis
+- File classification for components, pages, routes, models, configuration, and documentation
+- Dependency, framework, language, environment-variable name, and API route extraction
+- Weighted production-readiness checks with evidence, severity, risk, and confidence
+- Contextual upgrade recommendations and an approval-gated sandbox flow
+- Deployment Doctor flow that never reads or displays secret values
+- Editable showcase generation and evidence-aware Ask Project Twin answers
+- Responsive, accessible developer workspace with loading, empty, error, and success states
 
-## 📦 Getting Started
+Repository code is treated as untrusted input. The analyzer reads a limited set of relevant text files through the GitHub API and does not execute imported code.
 
-### Install Dependencies
+## Run locally
+
+Install dependencies once:
+
 ```bash
 npm install
+cd frontend && npm install
+cd ../backend && npm install
 ```
 
-### Run Development Server
+Start the frontend and backend together from the repository root:
+
 ```bash
 npm run dev
 ```
-The app will be available at `http://localhost:5173/`
 
-### Build for Production
+Open `http://localhost:5173`. The API runs on `http://localhost:5000`.
+
+Public GitHub repositories work without configuration. Copy the environment templates only when you need authenticated GitHub limits, saved accounts/projects, or a different API origin.
+
+## Verification
+
 ```bash
-npm run build
+cd backend && npm test
+cd ../frontend && npm run lint
+cd ../frontend && npm run build
 ```
 
-### Preview Production Build
-```bash
-npm run preview
+## Architecture
+
+```text
+React workspace
+      |
+      v
+Express analysis API -> asynchronous in-memory analysis jobs
+      |
+      v
+GitHub metadata/tree/blob APIs -> deterministic Project Twin model
+      |
+      +-> readiness checks
+      +-> upgrade recommendations
+      +-> deployment diagnosis
+      +-> evidence-aware answers
 ```
 
-## 🎨 Tailwind CSS
+The current hackathon foundation keeps analysis jobs in memory and retains the existing Mongo-backed account routes. The next production step is moving users, projects, analysis jobs, audit events, and Project Twin snapshots to PostgreSQL with a durable worker queue. Preview deployment is represented as an approval-gated provider workflow; connecting a deployment account and isolated build runner is required before it can publish a real URL.
 
-Tailwind CSS is configured and ready to use. The configuration files are:
-- `tailwind.config.js` - Tailwind configuration
-- `postcss.config.js` - PostCSS configuration
-- `src/index.css` - Tailwind directives
+## Security boundaries
 
-You can use Tailwind utility classes directly in your JSX components.
-
-## 📝 Available Scripts
-
-- `npm run dev` - Start development server with HMR
-- `npm run build` - Build for production
-- `npm run lint` - Run ESLint
-- `npm run preview` - Preview production build
-
-## 🔧 Vite Plugins
-
-Currently using [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) which uses Babel for Fast Refresh.
+- Imported repositories are never executed by the application server.
+- Only environment variable names and source locations are extracted.
+- Secret values are not requested, stored in Project Twin, or shown publicly.
+- Code changes, pull requests, environment updates, production deployments, and showcase publishing require explicit approval in the interface.
+- Private repository access uses the server-side `GITHUB_TOKEN`; it is never sent to the browser.
