@@ -43,6 +43,17 @@ cd ../frontend && npm run lint
 cd ../frontend && npm run build
 ```
 
+## GitHub Pages
+
+Pushes to `main` automatically build and publish the frontend through the
+`Deploy Project Twin to GitHub Pages` workflow. The published interface is
+available at `https://sanjaycoder48.github.io/codeNest/` after GitHub Pages is
+configured to use GitHub Actions as its source.
+
+GitHub Pages serves static files only. Live repository analysis requires the
+Express backend to be deployed separately and its public URL supplied as the
+frontend `VITE_API_URL` build variable.
+
 ## Architecture
 
 ```text
