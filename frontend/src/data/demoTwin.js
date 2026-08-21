@@ -158,5 +158,140 @@ export const expressTwin = {
   generatedAt: new Date().toISOString(),
 };
 
-export const showcaseProjects = [codeNestTwin, campusCareTwin, expressTwin];
+export const reactTwin = {
+  id: "facebook-react",
+  project: {
+    name: "React",
+    fullName: "facebook/react",
+    description: "The library for web and native user interfaces.",
+    repositoryUrl: "https://github.com/facebook/react",
+    defaultBranch: "main",
+    visibility: "public",
+    stars: 228000,
+    updatedAt: new Date().toISOString(),
+  },
+  summary: { files: 890, sourceFiles: 620, components: 42, pages: 0, apiRoutes: 0, models: 0, dependencies: 32 },
+  languages: [{ name: "JavaScript", files: 410 }, { name: "TypeScript", files: 210 }],
+  frameworks: ["React"],
+  dependencies: ["loose-envify", "object-assign", "scheduler"],
+  components: ["packages/react/src/React.js", "packages/react-dom/src/client/ReactDOM.js"],
+  pages: [],
+  apiRoutes: [],
+  models: [],
+  environment: [{ name: "NODE_ENV", file: "packages/react/index.js", sensitive: false }],
+  features: ["Concurrent rendering", "Server components", "Hooks state model", "Synthetic event system"],
+  architecture: {
+    nodes: [
+      { id: "reconciler", label: "Fiber Reconciler", type: "service" },
+      { id: "scheduler", label: "Priority Scheduler", type: "interface" },
+      { id: "dom", label: "ReactDOM Renderer", type: "service" },
+    ],
+    edges: [
+      { from: "reconciler", to: "scheduler", label: "Work scheduling" },
+      { from: "reconciler", to: "dom", label: "DOM mutations" },
+    ],
+  },
+  readiness: {
+    score: 98,
+    checks: [],
+    findings: [],
+  },
+  recommendations: [
+    { category: "Quality", title: "Strict Compiler Rules", current: "Manual memoization hooks", recommended: "Adopt React Compiler automated memoization", why: "Eliminates boilerplate useMemo and useCallback calls.", benefit: "Automatic performance optimization", compatibility: "Fully compatible", migrationRisk: "Low", migrationPlan: ["Install eslint-plugin-react-compiler", "Enable compiler transform in build tool"], evidence: "packages/react/src/React.js" },
+  ],
+  evidence: ["package.json", "README.md", "packages/react/package.json"],
+  generatedAt: new Date().toISOString(),
+};
+
+export const nextjsTwin = {
+  id: "vercel-next.js",
+  project: {
+    name: "Next.js",
+    fullName: "vercel/next.js",
+    description: "The React Framework for the Web.",
+    repositoryUrl: "https://github.com/vercel/next.js",
+    defaultBranch: "canary",
+    visibility: "public",
+    stars: 125000,
+    updatedAt: new Date().toISOString(),
+  },
+  summary: { files: 1240, sourceFiles: 950, components: 88, pages: 34, apiRoutes: 62, models: 12, dependencies: 58 },
+  languages: [{ name: "TypeScript", files: 720 }, { name: "Rust", files: 180 }, { name: "JavaScript", files: 50 }],
+  frameworks: ["Next.js", "React", "Turbopack"],
+  dependencies: ["react", "react-dom", "styled-jsx", "caniuse-lite", "postcss"],
+  components: ["packages/next/src/client/components/app-router.tsx"],
+  pages: ["packages/next/src/build/webpack/loaders/next-app-loader.ts"],
+  apiRoutes: [{ method: "ALL", path: "app-router", file: "packages/next/src/server/app-render.tsx" }],
+  models: [],
+  environment: [{ name: "NEXT_PUBLIC_API_HOST", file: "packages/next/src/client/components/headers.ts", sensitive: false }],
+  features: ["App Router & Server Actions", "Turbopack Rust Bundler", "Hybrid SSR & SSG", "Image & Font Optimization"],
+  architecture: {
+    nodes: [
+      { id: "app-router", label: "App Router", type: "interface" },
+      { id: "turbopack", label: "Turbopack Engine (Rust)", type: "service" },
+      { id: "edge", label: "Edge Middleware", type: "service" },
+    ],
+    edges: [
+      { from: "app-router", to: "turbopack", label: "Fast HMR / Build" },
+      { from: "app-router", to: "edge", label: "Request routing" },
+    ],
+  },
+  readiness: {
+    score: 96,
+    checks: [],
+    findings: [],
+  },
+  recommendations: [
+    { category: "Performance", title: "Enable Turbopack in Production", current: "Webpack bundler", recommended: "Use Turbopack production builds", why: "Dramatically speeds up build times and cold starts.", benefit: "Faster builds & cold starts", compatibility: "Next.js 15+", migrationRisk: "Low", migrationPlan: ["Enable next build --turbo", "Verify custom webpack configs"], evidence: "packages/next/src/server/config.ts" },
+  ],
+  evidence: ["package.json", "README.md", "packages/next/package.json"],
+  generatedAt: new Date().toISOString(),
+};
+
+export const tailwindTwin = {
+  id: "tailwindlabs-tailwindcss",
+  project: {
+    name: "Tailwind CSS",
+    fullName: "tailwindlabs/tailwindcss",
+    description: "A utility-first CSS framework for rapid UI development.",
+    repositoryUrl: "https://github.com/tailwindlabs/tailwindcss",
+    defaultBranch: "main",
+    visibility: "public",
+    stars: 82500,
+    updatedAt: new Date().toISOString(),
+  },
+  summary: { files: 310, sourceFiles: 240, components: 0, pages: 0, apiRoutes: 0, models: 0, dependencies: 18 },
+  languages: [{ name: "TypeScript", files: 190 }, { name: "CSS", files: 50 }],
+  frameworks: ["Tailwind CSS", "Lightning CSS"],
+  dependencies: ["lightningcss", "browserslist", "postcss"],
+  components: [],
+  pages: [],
+  apiRoutes: [],
+  models: [],
+  environment: [],
+  features: ["Utility engine v4", "LightningCSS integration", "Container queries", "CSS-first configuration"],
+  architecture: {
+    nodes: [
+      { id: "parser", label: "CSS Parser & Scanner", type: "service" },
+      { id: "engine", label: "LightningCSS Engine", type: "service" },
+      { id: "output", label: "Compiled CSS Bundle", type: "interface" },
+    ],
+    edges: [
+      { from: "parser", to: "engine", label: "Token stream" },
+      { from: "engine", to: "output", label: "Optimized CSS" },
+    ],
+  },
+  readiness: {
+    score: 97,
+    checks: [],
+    findings: [],
+  },
+  recommendations: [
+    { category: "Build Speed", title: "Adopt v4 CSS-first config", current: "JS tailwind.config.js", recommended: "Use @theme CSS block in v4", why: "Removes JS parsing overhead and simplifies setup.", benefit: "Faster builds & zero config JS", compatibility: "Tailwind v4", migrationRisk: "Low", migrationPlan: ["Migrate theme to @theme directive in CSS", "Remove tailwind.config.js"], evidence: "packages/tailwindcss/src/index.ts" },
+  ],
+  evidence: ["package.json", "README.md", "packages/tailwindcss/package.json"],
+  generatedAt: new Date().toISOString(),
+};
+
+export const showcaseProjects = [codeNestTwin, campusCareTwin, expressTwin, reactTwin, nextjsTwin, tailwindTwin];
 export const demoTwin = codeNestTwin;
