@@ -7,7 +7,7 @@ import {
   Settings, ShieldCheck, Sparkles, Sun, TestTube2, UploadCloud,
   WandSparkles, X, Zap,
 } from "lucide-react";
-import { demoTwin } from "./data/demoTwin";
+import { demoTwin, showcaseProjects } from "./data/demoTwin";
 import { analyzePublicRepository } from "./data/analyzePublicRepository";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
@@ -44,6 +44,14 @@ function ImportDialog({ open, onClose, onComplete }) {
   const [job, setJob] = useState(null);
   const [error, setError] = useState("");
 
+  const quickRepos = [
+    { label: "codeNest", repo: "sanjaycoder48/codeNest", desc: "Project Twin (Current)" },
+    { label: "React", repo: "facebook/react", desc: "UI Library" },
+    { label: "Next.js", repo: "vercel/next.js", desc: "React Framework" },
+    { label: "Express", repo: "expressjs/express", desc: "Node.js Framework" },
+    { label: "Tailwind", repo: "tailwindlabs/tailwindcss", desc: "CSS Framework" },
+  ];
+
   useEffect(() => {
     if (!open) {
       setJob(null);
@@ -74,19 +82,20 @@ function ImportDialog({ open, onClose, onComplete }) {
 
   if (!open) return null;
 
-  const startAnalysis = async (event) => {
-    event.preventDefault();
+  const startAnalysis = async (event, repoInput) => {
+    if (event) event.preventDefault();
+    const targetRepo = repoInput || repository;
     setError("");
     setJob({ status: "queued", progress: 4, stage: "Connecting to GitHub" });
     try {
       if (!API_URL) {
-        const twin = await analyzePublicRepository(repository, (progress, stage) => setJob({ status: "analyzing", progress, stage }));
+        const twin = await analyzePublicRepository(targetRepo, (progress, stage) => setJob({ status: "analyzing", progress, stage }));
         setJob({ status: "complete", progress: 100, stage: "Project Twin ready", twin });
         setTimeout(() => { setJob(null); onComplete(twin); }, 500);
         return;
       }
       const response = await fetch(`${API_URL}/api/analysis`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repository }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repository: targetRepo }),
       });
       const next = await response.json();
       if (!response.ok) throw new Error(next.message);
@@ -105,9 +114,22 @@ function ImportDialog({ open, onClose, onComplete }) {
           <button className="icon-button" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </header>
         {!job ? (
-          <form onSubmit={startAnalysis}>
+          <form onSubmit={(e) => startAnalysis(e)}>
             <label className="field-label" htmlFor="repository">Repository</label>
             <div className="input-shell"><Github size={18} /><input id="repository" value={repository} onChange={(event) => setRepository(event.target.value)} placeholder="owner/repository" autoFocus /></div>
+            <div className="quick-repos-strip" style={{ display: "flex", gap: "6px", flexWrap: "wrap", margin: "10px 0" }}>
+              {quickRepos.map((item) => (
+                <button
+                  type="button"
+                  key={item.repo}
+                  className="quick-chip"
+                  style={{ fontSize: "12px", padding: "4px 10px", borderRadius: "16px", border: "1px solid var(--border-color, #e2e8f0)", background: repository === item.repo ? "var(--accent-bg, #f1f5f9)" : "transparent", cursor: "pointer" }}
+                  onClick={() => { setRepository(item.repo); startAnalysis(null, item.repo); }}
+                >
+                  ⚡ {item.label}
+                </button>
+              ))}
+            </div>
             <p className="field-help">Public repositories work immediately. Private access can use a server-side GitHub token.</p>
             {error && <div className="inline-alert"><AlertTriangle size={17} /><span>{error}</span></div>}
             <div className="trust-list">
@@ -177,11 +199,39 @@ function Sidebar({ active, onChange, onImport, onSettings, mobileOpen, setMobile
   </aside>;
 }
 
-function Topbar({ twin, onImport, onMobileMenu, onSearch, theme, onToggleTheme, onChange }) {
+function Topbar({ twin, onSelectTwin, onImport, onMobileMenu, onSearch, theme, onToggleTheme, onChange }) {
   const [projectOpen, setProjectOpen] = useState(false);
   return <header className="topbar">
     <button className="mobile-menu" onClick={onMobileMenu} aria-label="Open navigation"><Menu size={19} /></button>
-    <div className="project-switcher-wrap"><button className="project-switcher" onClick={() => setProjectOpen((value) => !value)} aria-expanded={projectOpen}><span className="project-avatar">{twin.project.name.slice(0, 2).toUpperCase()}</span><span className="project-switcher-copy"><strong>{twin.project.name}</strong><small>{twin.project.fullName}</small></span><ChevronDown size={15} /></button>{projectOpen ? <div className="project-menu panel"><p className="nav-label">Current project</p><button onClick={() => { onChange("Overview"); setProjectOpen(false); }}><Home size={15} /><span><strong>{twin.project.name}</strong><small>Open project overview</small></span></button><button onClick={() => { window.open(twin.project.repositoryUrl, "_blank", "noopener,noreferrer"); setProjectOpen(false); }}><Github size={15} /><span><strong>Repository</strong><small>{twin.project.fullName}</small></span></button><button onClick={() => { onImport(); setProjectOpen(false); }}><Plus size={15} /><span><strong>Import another project</strong><small>Analyze a public GitHub repository</small></span></button></div> : null}</div>
+    <div className="project-switcher-wrap">
+      <button className="project-switcher" onClick={() => setProjectOpen((value) => !value)} aria-expanded={projectOpen}>
+        <span className="project-avatar">{twin.project.name.slice(0, 2).toUpperCase()}</span>
+        <span className="project-switcher-copy"><strong>{twin.project.name}</strong><small>{twin.project.fullName}</small></span>
+        <ChevronDown size={15} />
+      </button>
+      {projectOpen ? (
+        <div className="project-menu panel">
+          <p className="nav-label">Current project</p>
+          <button onClick={() => { onChange("Overview"); setProjectOpen(false); }}>
+            <Home size={15} /><span><strong>{twin.project.name}</strong><small>Open project overview</small></span>
+          </button>
+          <button onClick={() => { window.open(twin.project.repositoryUrl, "_blank", "noopener,noreferrer"); setProjectOpen(false); }}>
+            <Github size={15} /><span><strong>Repository</strong><small>{twin.project.fullName}</small></span>
+          </button>
+          <p className="nav-label nav-label-spaced">Featured Showcase Projects</p>
+          {showcaseProjects.map((item) => (
+            <button key={item.id} onClick={() => { onSelectTwin(item); onChange("Overview"); setProjectOpen(false); }}>
+              <Sparkles size={15} /><span><strong>{item.project.name}</strong><small>{item.project.fullName}</small></span>
+            </button>
+          ))}
+          <div style={{ borderTop: "1px solid var(--border-color, #e2e8f0)", marginTop: "6px", paddingTop: "6px" }}>
+            <button onClick={() => { onImport(); setProjectOpen(false); }}>
+              <Plus size={15} /><span><strong>Import custom GitHub repo</strong><small>Analyze any public repository URL</small></span>
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
     <div className="topbar-actions"><button className="command-search" onClick={onSearch}><Search size={16} /><span>Search project</span><kbd>Ctrl K</kbd></button><button className="icon-button mobile-search" onClick={onSearch} aria-label="Search project"><Search size={17} /></button><button className="icon-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}</button><Button variant="secondary" onClick={onImport}><Github size={16} /> Import repository</Button></div>
   </header>;
 }
@@ -374,6 +424,6 @@ export default function App() {
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
-  const pages = { Overview: <Overview twin={twin} setActive={changeView} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} />, Readiness: <Readiness twin={twin} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy requestConfirm={requestConfirm} notify={notify} />, Showcase: <Showcase twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} /> };
-  return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} /><main className="main-content">{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
+  const pages = { Overview: <Overview twin={twin} setActive={changeView} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} />, Readiness: <Readiness twin={twin} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy requestConfirm={requestConfirm} notify={notify} />, Showcase: <Showcase twin={twin} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} onSelectTwin={setTwin} /> };
+  return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onSelectTwin={setTwin} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} /><main className="main-content">{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
 }
