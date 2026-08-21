@@ -373,21 +373,40 @@ function Showcase({ twin, requestConfirm, notify, onAsk }) {
 
 function AskTwin({ twin, open, setOpen }) {
   const [question, setQuestion] = useState("");
-  const [messages, setMessages] = useState([{ role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository. Ask about architecture, authentication, routes, dependencies, or readiness.`, evidence: [] }]);
+  const [messages, setMessages] = useState([
+    { role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository. Ask about architecture, authentication, routes, dependencies, readiness, or how to develop this project to the next level.`, evidence: [] }
+  ]);
   const answerQuestion = (value) => {
     const lower = value.toLowerCase();
     let response;
-    if (lower.includes("auth")) {
+    if (lower.includes("auth") || lower.includes("login") || lower.includes("jwt") || lower.includes("session")) {
       const evidence = [...new Set([...twin.evidence, ...twin.apiRoutes.map((route) => route.file)])].filter((file) => /auth|user|session/i.test(file));
-      response = evidence.length ? { text: `Authentication is implemented around ${evidence[0]}. I can verify the location, but not runtime identity-provider behavior from the indexed evidence alone.`, evidence: evidence.slice(0, 2) } : { text: "I could not verify where authentication is implemented from the indexed evidence.", evidence: [] };
-    } else if (lower.includes("architect") || lower.includes("backend")) response = { text: `${twin.project.name} uses ${twin.frameworks.join(", ")}. The detected runtime path is ${twin.architecture.nodes.map((node) => node.label).join(" → ")}.`, evidence: twin.evidence.filter((file) => /package|config|route|schema/i.test(file)).slice(0, 3) };
-    else if (lower.includes("improve") || lower.includes("deploy") || lower.includes("ready")) response = { text: `Launch readiness is ${twin.readiness.score}/100. The highest-priority issue is: ${twin.readiness.findings[0]?.problem || "none"}. ${twin.readiness.findings[0]?.solution || "All checks pass."}`, evidence: twin.readiness.findings[0] ? [twin.readiness.findings[0].file] : [] };
-    else if (lower.includes("depend")) response = { text: `I verified ${twin.dependencies.length} dependencies. Primary framework signals are ${twin.frameworks.join(", ")}. Package age and advisories require a live registry audit and are not inferred.`, evidence: twin.evidence.filter((file) => /package|requirements|pyproject/i.test(file)).slice(0, 3) };
-    else response = { text: `I can verify ${twin.summary.components} components, ${twin.summary.pages} pages, ${twin.summary.apiRoutes} API routes, and ${twin.features.length} detected features. I could not verify the specific detail in your question.`, evidence: twin.evidence.slice(0, 2) };
-    setMessages((current) => [...current, { role: "user", text: value }, { role: "assistant", ...response }]); setQuestion("");
+      response = evidence.length ? { text: `Authentication is implemented around ${evidence[0]}. I can verify the location, but not runtime identity-provider behavior from the indexed evidence alone.`, evidence: evidence.slice(0, 3) } : { text: "I could not verify where authentication is implemented from the indexed evidence.", evidence: [] };
+    } else if (lower.includes("architect") || lower.includes("backend") || lower.includes("frontend") || lower.includes("structure")) {
+      response = { text: `${twin.project.name} uses ${twin.frameworks.join(", ")}. The detected runtime path is ${twin.architecture.nodes.map((node) => node.label).join(" → ")}.`, evidence: twin.evidence.filter((file) => /package|config|route|schema/i.test(file)).slice(0, 3) };
+    } else if (lower.includes("develop") || lower.includes("next level") || lower.includes("upgrade") || lower.includes("roadmap") || lower.includes("future") || lower.includes("scale") || lower.includes("recommend")) {
+      const recs = twin.recommendations.map((r, i) => `${i + 1}. ${r.title} — ${r.recommended} (${r.benefit})`).join("\n");
+      const recText = recs || "1. Increase automated integration test coverage.\n2. Configure explicit security headers.\n3. Migrate background jobs to a durable worker queue.";
+      response = { text: `To develop ${twin.project.name} to the next level, focus on these verified recommendations:\n\n${recText}`, evidence: twin.recommendations.map((r) => r.evidence).filter(Boolean).slice(0, 3) };
+    } else if (lower.includes("security") || lower.includes("protect") || lower.includes("secret") || lower.includes("vulnerab")) {
+      const secFindings = twin.readiness.findings.filter((f) => f.area === "Security" || f.severity === "high" || f.severity === "critical");
+      const text = secFindings.length ? `Security audit identified ${secFindings.length} issue(s). Highest priority: ${secFindings[0].problem}. Recommended fix: ${secFindings[0].solution}` : `All verified security checks passed for ${twin.project.name}. Protected environment variables: ${twin.environment.filter((e) => e.sensitive).map((e) => e.name).join(", ") || "None"}.`;
+      response = { text, evidence: secFindings.map((f) => f.file).filter(Boolean).slice(0, 3) };
+    } else if (lower.includes("improve") || lower.includes("deploy") || lower.includes("ready") || lower.includes("block")) {
+      response = { text: `Launch readiness for ${twin.project.name} is ${twin.readiness.score}/100. Highest-priority focus: ${twin.readiness.findings[0]?.problem || "All launch checks pass."}. Solution: ${twin.readiness.findings[0]?.solution || "The repository is launch-ready."}`, evidence: twin.readiness.findings[0] ? [twin.readiness.findings[0].file] : [] };
+    } else if (lower.includes("depend") || lower.includes("package") || lower.includes("lib")) {
+      response = { text: `I verified ${twin.dependencies.length} dependencies in ${twin.project.name}. Primary framework signals are ${twin.frameworks.join(", ")}. Dependencies include: ${twin.dependencies.slice(0, 6).join(", ")}.`, evidence: twin.evidence.filter((file) => /package|requirements|pyproject/i.test(file)).slice(0, 3) };
+    } else if (lower.includes("feature") || lower.includes("do") || lower.includes("can")) {
+      response = { text: `${twin.project.name} includes ${twin.features.length} verified features: ${twin.features.join(", ")}.`, evidence: twin.evidence.slice(0, 3) };
+    } else {
+      const topRec = twin.recommendations[0]?.title ? ` Suggested upgrade: ${twin.recommendations[0].title}.` : "";
+      response = { text: `${twin.project.name} has ${twin.summary.components} components, ${twin.summary.pages} pages, ${twin.summary.apiRoutes} API routes, and a launch readiness score of ${twin.readiness.score}/100.${topRec}`, evidence: twin.evidence.slice(0, 3) };
+    }
+    setMessages((current) => [...current, { role: "user", text: value }, { role: "assistant", ...response }]);
+    setQuestion("");
   };
   const submit = (event) => { event.preventDefault(); if (question.trim()) answerQuestion(question.trim()); };
-  return <><button className="ask-bar" onClick={() => setOpen(true)}><span><Sparkles size={17} /> Ask Project Twin...</span><kbd>Ctrl Enter</kbd></button>{open && <div className="ask-panel"><header><div><span className="assistant-mark"><Sparkles size={17} /></span><div><strong>Ask Project Twin</strong><small>Grounded in repository evidence</small></div></div><button className="icon-button" aria-label="Close Project Twin assistant" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="chat-messages">{messages.map((message, index) => <div key={index} className={`message message-${message.role}`}><p>{message.text}</p>{message.evidence?.length > 0 && <div className="message-evidence"><span>Evidence</span>{message.evidence.map((item) => <code key={item}>{item}</code>)}</div>}</div>)}</div><div className="prompt-suggestions">{["Explain the architecture", "Where is authentication handled?", "What blocks deployment?"].map((item) => <button key={item} onClick={() => answerQuestion(item)}>{item}</button>)}</div><form onSubmit={submit} className="chat-input"><input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about this project..." autoFocus /><button aria-label="Send question"><Send size={16} /></button></form></div>}</>;
+  return <><button className="ask-bar" onClick={() => setOpen(true)}><span><Sparkles size={17} /> Ask Project Twin...</span><kbd>Ctrl Enter</kbd></button>{open && <div className="ask-panel"><header><div><span className="assistant-mark"><Sparkles size={17} /></span><div><strong>Ask Project Twin</strong><small>Grounded in repository evidence</small></div></div><button className="icon-button" aria-label="Close Project Twin assistant" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="chat-messages">{messages.map((message, index) => <div key={index} className={`message message-${message.role}`}><p style={{ whiteSpace: "pre-wrap" }}>{message.text}</p>{message.evidence?.length > 0 && <div className="message-evidence"><span>Evidence</span>{message.evidence.map((item) => <code key={item}>{item}</code>)}</div>}</div>)}</div><div className="prompt-suggestions">{["Explain the architecture", "How can I develop this project to the next level?", "Where is authentication handled?"].map((item) => <button key={item} onClick={() => answerQuestion(item)}>{item}</button>)}</div><form onSubmit={submit} className="chat-input"><input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about this project..." autoFocus /><button aria-label="Send question"><Send size={16} /></button></form></div>}</>;
 }
 
 function Toast({ message }) { return message ? <div className="toast"><CheckCircle2 size={17} />{message}</div> : null; }
