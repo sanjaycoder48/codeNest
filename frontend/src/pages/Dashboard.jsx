@@ -22,7 +22,7 @@ const Dashboard = () => {
             }
         };
         fetchProjects();
-    }, []);
+    }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");

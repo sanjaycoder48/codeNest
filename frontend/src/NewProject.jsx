@@ -1,9 +1,11 @@
 
 
-function newProject(){
+function NewProject(){
    return(
       <div>
          
       </div>
    );
 }
+
+export default NewProject;

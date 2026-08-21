@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Laptop, Rocket, Users, Globe } from "lucide-react";
 
 const features = [
@@ -32,7 +32,7 @@ const Features = () => {
 
                 <div className="grid md:grid-cols-3 gap-12">
                     {features.map((feature, index) => (
-                        <motion.div
+                        <Motion.div
                             key={index}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ const Features = () => {
                             <p className="text-gray-500 leading-relaxed">
                                 {feature.description}
                             </p>
-                        </motion.div>
+                        </Motion.div>
                     ))}
                 </div>
             </div>

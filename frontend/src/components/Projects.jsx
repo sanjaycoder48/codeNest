@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 
 const projects = [
     {
@@ -41,7 +41,7 @@ const Projects = () => {
 
                 <div className="grid md:grid-cols-2 gap-8">
                     {projects.map((project, index) => (
-                        <motion.div
+                        <Motion.div
                             key={index}
                             initial={{ opacity: 0, scale: 0.95 }}
                             whileInView={{ opacity: 1, scale: 1 }}
@@ -60,7 +60,7 @@ const Projects = () => {
                                 <span className="text-white/70 text-sm font-medium mb-2">{project.category}</span>
                                 <h3 className="text-white text-3xl font-bold">{project.title}</h3>
                             </div>
-                        </motion.div>
+                        </Motion.div>
                     ))}
                 </div>
             </div>

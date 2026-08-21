@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { ArrowRight, User, Mail, Lock } from "lucide-react";
 import axios from "axios";
 
@@ -21,7 +21,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-md w-full glass-card p-10 bg-white"
@@ -85,7 +85,7 @@ const Register = () => {
                 <p className="text-center mt-8 text-sm text-gray-500">
                     Already have an account? <Link to="/login" className="text-black font-bold hover:underline">Sign in</Link>
                 </p>
-            </motion.div>
+            </Motion.div>
         </div>
     );
 };
