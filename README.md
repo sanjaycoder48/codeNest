@@ -1,4 +1,4 @@
-# Project Twin
+# CodeNest
 
 Project Twin turns a GitHub repository into a living, evidence-grounded model of the project. It classifies repository files, extracts deterministic metadata, builds architecture context, scores production readiness, recommends contextual improvements, diagnoses deployment configuration failures, and generates an editable public showcase.
 
