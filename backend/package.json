@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
-  "description": "CodeNest API - Express + MongoDB backend",
+  "description": "Project Twin API - Express + MongoDB backend",
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

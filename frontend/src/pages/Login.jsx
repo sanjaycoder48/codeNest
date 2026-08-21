@@ -1,47 +1,29 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Lock, Mail, Loader2 } from "lucide-react";
-import api, { errorMessage } from "../lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "../context/auth-context";
+import { Link, useNavigate } from "react-router-dom";
+import { motion as Motion } from "framer-motion";
+import { ArrowRight, Lock, Mail } from "lucide-react";
+import axios from "axios";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
-
     const navigate = useNavigate();
-    const location = useLocation();
-    const { login } = useAuth();
-
-    // Send the user back where they were headed before the guard intercepted them.
-    const redirectTo = location.state?.from?.pathname || "/dashboard";
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (submitting) return;
-
-        setError("");
-        setSubmitting(true);
         try {
-            const res = await api.post("/api/auth/login", { email, password });
-            login(res.data.token, res.data.user);
-            navigate(redirectTo, { replace: true });
+            const res = await axios.post("http://localhost:5000/api/auth/login", { email, password });
+            localStorage.setItem("token", res.data.token);
+            navigate("/dashboard");
         } catch (err) {
-            setError(errorMessage(err, "Login failed"));
-        } finally {
-            setSubmitting(false);
+            setError(err.response?.data?.message || "Login failed");
         }
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-md w-full glass-card p-10 bg-white"
@@ -52,25 +34,18 @@ const Login = () => {
                     <p className="text-gray-500 text-sm mt-2">Enter your credentials to access your nest.</p>
                 </div>
 
-                {error && (
-                    <Alert className="mb-6">
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
+                {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <Label htmlFor="login-email">Email Address</Label>
+                        <label className="block text-sm font-bold mb-2">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <Input
-                                id="login-email"
-                                name="email"
+                            <input
                                 type="email"
-                                autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="pl-10"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="name@company.com"
                                 required
                             />
@@ -78,36 +53,29 @@ const Login = () => {
                     </div>
 
                     <div>
-                        <Label htmlFor="login-password">Password</Label>
+                        <label className="block text-sm font-bold mb-2">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <Input
-                                id="login-password"
-                                name="password"
+                            <input
                                 type="password"
-                                autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="pl-10"
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="••••••••"
                                 required
                             />
                         </div>
                     </div>
 
-                    <Button type="submit" disabled={submitting} className="w-full">
-                        {submitting ? (
-                            <>Signing in <Loader2 size={18} className="animate-spin" /></>
-                        ) : (
-                            <>Sign In <ArrowRight size={18} /></>
-                        )}
-                    </Button>
+                    <button type="submit" className="w-full btn-primary flex items-center justify-center gap-2">
+                        Sign In <ArrowRight size={18} />
+                    </button>
                 </form>
 
                 <p className="text-center mt-8 text-sm text-gray-500">
                     Don&apos;t have an account? <Link to="/register" className="text-black font-bold hover:underline">Sign up for free</Link>
                 </p>
-            </motion.div>
+            </Motion.div>
         </div>
     );
 };

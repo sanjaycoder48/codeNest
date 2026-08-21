@@ -1,84 +1,68 @@
-# CodeNest
+# Project Twin
 
-A developer hub for publishing and organising your engineering projects.
-React + Vite frontend, Express + MongoDB API, JWT authentication.
+Project Twin turns a GitHub repository into a living, evidence-grounded model of the project. It classifies repository files, extracts deterministic metadata, builds architecture context, scores production readiness, recommends contextual improvements, diagnoses deployment configuration failures, and generates an editable public showcase.
 
-## Requirements
+## What works
 
-- **Node.js 18+** (tested on 22)
-- **MongoDB** running locally, or a MongoDB Atlas connection string
+- Asynchronous public GitHub repository import and analysis
+- File classification for components, pages, routes, models, configuration, and documentation
+- Dependency, framework, language, environment-variable name, and API route extraction
+- Weighted production-readiness checks with evidence, severity, risk, and confidence
+- Contextual upgrade recommendations and an approval-gated sandbox flow
+- Deployment Doctor flow that never reads or displays secret values
+- Editable showcase generation and evidence-aware Ask Project Twin answers
+- Responsive, accessible developer workspace with loading, empty, error, and success states
 
-## Setup
+Repository code is treated as untrusted input. The analyzer reads a limited set of relevant text files through the GitHub API and does not execute imported code.
 
-Install both workspaces:
+## Run locally
 
-```bash
-npm run install:all
-```
-
-Create the API environment file from the template:
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-`JWT_SECRET` is required — the server refuses to start without it. Generate one:
+Install dependencies once:
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+npm install
+cd frontend && npm install
+cd ../backend && npm install
 ```
 
-The frontend reads its API URL from `frontend/.env`, which already defaults to
-`http://localhost:5000`. Copy `frontend/.env.example` if it is missing.
-
-> **Note:** `.env` files are gitignored. Never commit real secrets.
-
-## Running
-
-Both servers together:
+Start the frontend and backend together from the repository root:
 
 ```bash
 npm run dev
 ```
 
-- Frontend — http://localhost:5173
-- API — http://localhost:5000
+Open `http://localhost:5173`. The API runs on `http://localhost:5000`.
 
-Individually: `npm run start:frontend` / `npm run start:backend`.
-
-## Testing
-
-```bash
-npm test          # from the repo root
-```
-
-Integration tests run against an in-memory MongoDB, so no local database is
-needed. They cover registration, login, NoSQL injection rejection, rate
-limiting, project CRUD, and cross-user ownership enforcement.
-
-Lint the frontend:
+Public GitHub repositories work without configuration. Copy the environment
+templates when you need authenticated GitHub limits, saved accounts/projects, or
+a different API origin:
 
 ```bash
-npm run lint      # from the repo root
+cp backend/.env.example backend/.env
 ```
 
-## API
+`JWT_SECRET` is required — the API exits immediately if it is missing rather
+than falling back to a guessable value. Generate one with:
 
-All `/api/projects` routes require an `Authorization: Bearer <token>` header.
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| `POST` | `/api/auth/register` | — | Create an account; returns a token |
-| `POST` | `/api/auth/login` | — | Sign in; returns a token |
-| `GET` | `/api/auth/me` | ✓ | Current user |
-| `GET` | `/api/projects` | ✓ | List your projects (`?q=`, `?page=`, `?limit=`) |
-| `POST` | `/api/projects` | ✓ | Create a project |
-| `GET` | `/api/projects/:id` | ✓ | Read one of your projects |
-| `PATCH` | `/api/projects/:id` | ✓ | Update a project |
-| `DELETE` | `/api/projects/:id` | ✓ | Delete a project |
-| `GET` | `/health` | — | Liveness and database status |
+MongoDB is optional. Repository analysis runs without it; only authentication
+and saved projects need a database. `GET /health` reports connection state.
 
-Auth endpoints are rate limited to 10 attempts per 15 minutes per IP.
+## Verification
+
+```bash
+cd backend && npm test
+cd ../frontend && npm run lint
+cd ../frontend && npm run build
+```
+
+The backend suite runs against an in-memory MongoDB, so no local database is
+required. It covers registration, login, NoSQL-operator rejection, rate
+limiting, project CRUD, cross-user ownership enforcement, and the repository
+analyzer.
 
 ## Environment variables
 
@@ -86,49 +70,71 @@ Auth endpoints are rate limited to 10 attempts per 15 minutes per IP.
 
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `JWT_SECRET` | **yes** | — | Token signing key; server exits if unset |
+| `JWT_SECRET` | **yes** | — | Token signing key; the server exits if unset |
 | `MONGO_URI` | no | `mongodb://localhost:27017/codenest` | Database connection |
 | `PORT` | no | `5000` | API port |
-| `CLIENT_URL` | no | `http://localhost:5173` | Allowed CORS origin |
-| `AUTH_RATE_LIMIT_MAX` | no | `10` | Auth attempts per window |
+| `CLIENT_URL` | no | `http://localhost:5173` | Comma-separated CORS allowlist |
+| `GITHUB_TOKEN` | no | — | Raises GitHub API limits; never sent to the browser |
+| `AUTH_RATE_LIMIT_MAX` | no | `10` | Auth attempts per IP per 15 minutes |
+| `TRUST_PROXY` | no | — | Proxy hop count, so rate limiting sees the real client IP |
 
 **frontend/.env**
 
 | Variable | Required | Default | Purpose |
 | --- | --- | --- | --- |
-| `VITE_API_URL` | no | `http://localhost:5000` | API base URL |
+| `VITE_API_URL` | no | *(empty)* | API origin; empty runs analysis in the browser |
 
-## Project structure
+`.env` files are gitignored. Never commit real secrets.
 
+## GitHub Pages
+
+Pushes to `main` automatically build and publish the frontend through the
+`Deploy Project Twin to GitHub Pages` workflow. The published interface is
+available at `https://sanjaycoder48.github.io/codeNest/` after GitHub Pages is
+configured to use GitHub Actions as its source.
+
+GitHub Pages serves static files only. Live repository analysis requires the
+Express backend to be deployed separately and its public URL supplied as the
+frontend `VITE_API_URL` build variable. When you do that, add the Pages origin
+to the backend `CLIENT_URL` allowlist or the browser will block the requests.
+
+## Architecture
+
+```text
+React workspace
+      |
+      v
+Express analysis API -> asynchronous in-memory analysis jobs
+      |
+      v
+GitHub metadata/tree/blob APIs -> deterministic Project Twin model
+      |
+      +-> readiness checks
+      +-> upgrade recommendations
+      +-> deployment diagnosis
+      +-> evidence-aware answers
 ```
-backend/
-  app.js            Express app (mounted by server.js, imported by tests)
-  server.js         Startup: env checks, DB connection, listen, shutdown
-  middleware/auth.js
-  models/           User, Project
-  routes/           auth, projects
-  test/             Integration tests (in-memory MongoDB)
-frontend/
-  src/lib/api.js       Shared axios instance + auth interceptors
-  src/context/         Auth state (provider + hook)
-  src/components/      Navbar, Hero, Features, Projects, Footer,
-                       ProjectForm, RequireAuth, ErrorBoundary, PageLoader
-  src/pages/           Home, Login, Register, Dashboard, NotFound
-```
 
-## Tech stack
+The current hackathon foundation keeps analysis jobs in memory and retains the existing Mongo-backed account routes. The next production step is moving users, projects, analysis jobs, audit events, and Project Twin snapshots to PostgreSQL with a durable worker queue. Preview deployment is represented as an approval-gated provider workflow; connecting a deployment account and isolated build runner is required before it can publish a real URL.
 
-React 19 · Vite 7 · Tailwind CSS 4 · React Router 7 · Express 5 · Mongoose 9 ·
-JWT · bcrypt · Helmet
+## Security boundaries
 
-Tailwind v4 is configured CSS-first in `src/index.css` via `@theme` — there is
-no `tailwind.config.js`.
+- Imported repositories are never executed by the application server.
+- Only environment variable names and source locations are extracted.
+- Secret values are not requested, stored in Project Twin, or shown publicly.
+- Code changes, pull requests, environment updates, production deployments, and showcase publishing require explicit approval in the interface.
+- Private repository access uses the server-side `GITHUB_TOKEN`; it is never sent to the browser.
 
-## Not built yet
+## API hardening
 
-Public project pages, an explore feed, developer profiles, and password reset.
-Footer links for unbuilt sections are marked "Soon" rather than pointing at
-routes that do not exist.
+The account API applies these regardless of which interface calls it:
+
+- Credentials are type-checked, so query operators cannot reach a filter; Mongoose `sanitizeFilter` is enabled as a second layer.
+- Auth endpoints are rate limited per IP.
+- `helmet` sets security headers; CORS uses an explicit origin allowlist.
+- Passwords are bcrypt-hashed and never serialised in a response.
+- Project routes scope every read, update, and delete to the owning user.
+- Errors are logged server-side and returned as generic messages.
 
 ## License
 

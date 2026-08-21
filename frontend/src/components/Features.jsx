@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Laptop, Rocket, Users, Globe } from "lucide-react";
 
 const features = [
@@ -15,13 +15,13 @@ const features = [
     {
         icon: <Globe className="w-8 h-8" />,
         title: "Global Scale",
-        description: "Multi-region deployment ensures your app is fast for users everywhere."
+        description: "Multi-region deployment ensure your app is fast for users everywhere."
     }
 ];
 
 const Features = () => {
     return (
-        <section id="features" className="py-32 bg-white px-6 scroll-mt-24">
+        <section className="py-32 bg-white px-6">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-20">
                     <h2 className="text-4xl md:text-5xl font-bold mb-6">Innovative Features</h2>
@@ -32,8 +32,8 @@ const Features = () => {
 
                 <div className="grid md:grid-cols-3 gap-12">
                     {features.map((feature, index) => (
-                        <motion.div
-                            key={feature.title}
+                        <Motion.div
+                            key={index}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.1, duration: 0.6 }}
@@ -47,7 +47,7 @@ const Features = () => {
                             <p className="text-gray-500 leading-relaxed">
                                 {feature.description}
                             </p>
-                        </motion.div>
+                        </Motion.div>
                     ))}
                 </div>
             </div>

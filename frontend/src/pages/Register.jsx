@@ -1,50 +1,27 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, User, Mail, Lock, Loader2 } from "lucide-react";
-import api, { errorMessage } from "../lib/api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useAuth } from "../context/auth-context";
+import { motion as Motion } from "framer-motion";
+import { ArrowRight, User, Mail, Lock } from "lucide-react";
+import axios from "axios";
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: "", email: "", password: "" });
     const [error, setError] = useState("");
-    const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
-
-    const setField = (field) => (e) =>
-        setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (submitting) return;
-
-        setError("");
-        if (formData.password.length < 8) {
-            setError("Password must be at least 8 characters.");
-            return;
-        }
-
-        setSubmitting(true);
         try {
-            const res = await api.post("/api/auth/register", formData);
-            // The API signs the new user in, so skip the trip through the login form.
-            login(res.data.token, res.data.user);
-            navigate("/dashboard", { replace: true });
+            await axios.post("http://localhost:5000/api/auth/register", formData);
+            navigate("/login");
         } catch (err) {
-            setError(errorMessage(err, "Registration failed"));
-        } finally {
-            setSubmitting(false);
+            setError(err.response?.data?.message || "Registration failed");
         }
     };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-            <motion.div
+            <Motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-md w-full glass-card p-10 bg-white"
@@ -55,25 +32,17 @@ const Register = () => {
                     <p className="text-gray-500 text-sm mt-2">Join the elite community of developers.</p>
                 </div>
 
-                {error && (
-                    <Alert className="mb-6">
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                )}
+                {error && <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm mb-6">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <Label htmlFor="register-name">Full Name</Label>
+                        <label className="block text-sm font-bold mb-2">Full Name</label>
                         <div className="relative">
                             <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <Input
-                                id="register-name"
-                                name="name"
+                            <input
                                 type="text"
-                                autoComplete="name"
-                                value={formData.name}
-                                onChange={setField("name")}
-                                className="pl-10"
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="John Doe"
                                 required
                             />
@@ -81,17 +50,13 @@ const Register = () => {
                     </div>
 
                     <div>
-                        <Label htmlFor="register-email">Email Address</Label>
+                        <label className="block text-sm font-bold mb-2">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <Input
-                                id="register-email"
-                                name="email"
+                            <input
                                 type="email"
-                                autoComplete="email"
-                                value={formData.email}
-                                onChange={setField("email")}
-                                className="pl-10"
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="name@company.com"
                                 required
                             />
@@ -99,38 +64,28 @@ const Register = () => {
                     </div>
 
                     <div>
-                        <Label htmlFor="register-password">Password</Label>
+                        <label className="block text-sm font-bold mb-2">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                            <Input
-                                id="register-password"
-                                name="password"
+                            <input
                                 type="password"
-                                autoComplete="new-password"
-                                minLength={8}
-                                value={formData.password}
-                                onChange={setField("password")}
-                                className="pl-10"
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 transition-all"
                                 placeholder="••••••••"
                                 required
                             />
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">At least 8 characters.</p>
                     </div>
 
-                    <Button type="submit" disabled={submitting} className="w-full">
-                        {submitting ? (
-                            <>Creating account <Loader2 size={18} className="animate-spin" /></>
-                        ) : (
-                            <>Sign Up <ArrowRight size={18} /></>
-                        )}
-                    </Button>
+                    <button type="submit" className="w-full btn-primary flex items-center justify-center gap-2">
+                        Sign Up <ArrowRight size={18} />
+                    </button>
                 </form>
 
                 <p className="text-center mt-8 text-sm text-gray-500">
                     Already have an account? <Link to="/login" className="text-black font-bold hover:underline">Sign in</Link>
                 </p>
-            </motion.div>
+            </Motion.div>
         </div>
     );
 };

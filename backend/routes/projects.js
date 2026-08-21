@@ -27,6 +27,31 @@ const validateBody = ({ title, description }) => {
     return null;
 };
 
+// PATCH is a partial update: validate only the fields that were sent, and build
+// an update containing only those. Validating the whole body would make PATCH
+// behave like PUT, and unconditionally writing techStack would erase it
+// whenever a caller omitted the field.
+const buildPatch = (body) => {
+    const update = {};
+
+    if ('title' in body) {
+        if (typeof body.title !== 'string' || !body.title.trim()) return { error: 'Title is required.' };
+        if (body.title.length > 120) return { error: 'Title must be 120 characters or fewer.' };
+        update.title = body.title;
+    }
+    if ('description' in body) {
+        if (typeof body.description !== 'string' || !body.description.trim()) return { error: 'Description is required.' };
+        if (body.description.length > 2000) return { error: 'Description must be 2000 characters or fewer.' };
+        update.description = body.description;
+    }
+    if ('techStack' in body) {
+        update.techStack = normaliseTechStack(body.techStack);
+    }
+
+    if (Object.keys(update).length === 0) return { error: 'Nothing to update.' };
+    return { update };
+};
+
 const validId = (req, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return res.status(404).json({ message: 'Project not found' });
@@ -54,7 +79,9 @@ router.post('/', auth, async (req, res, next) => {
 
 // List the signed-in user's projects, newest first, with optional text filter.
 router.get('/', auth, async (req, res, next) => {
-    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+    // Clamp low as well as high: a negative limit reaches MongoDB as a
+    // single-batch cursor hint rather than being rejected.
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
 
     try {
@@ -93,17 +120,13 @@ router.get('/:id', auth, validId, async (req, res, next) => {
 
 // Update
 router.patch('/:id', auth, validId, async (req, res, next) => {
-    const invalid = validateBody(req.body);
-    if (invalid) return res.status(400).json({ message: invalid });
+    const { error, update } = buildPatch(req.body ?? {});
+    if (error) return res.status(400).json({ message: error });
 
     try {
         const project = await Project.findOneAndUpdate(
             { _id: req.params.id, userId: req.user.id },
-            {
-                title: req.body.title,
-                description: req.body.description,
-                techStack: normaliseTechStack(req.body.techStack)
-            },
+            update,
             { returnDocument: 'after', runValidators: true }
         );
         if (!project) return res.status(404).json({ message: 'Project not found' });

@@ -1,12 +1,7 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { ArrowRight, Code, Shield, Zap } from "lucide-react";
-import { useAuth } from "../context/auth-context";
-import { Button } from "@/components/ui/button";
 
 const Hero = () => {
-    const { isAuthenticated } = useAuth();
-
     return (
         <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-white">
             {/* Background Floating Elements */}
@@ -14,7 +9,7 @@ const Hero = () => {
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-black/5 rounded-full blur-3xl animate-float blur-shape" style={{ animationDelay: '2s' }} />
 
             <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
@@ -32,21 +27,17 @@ const Hero = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <Link to={isAuthenticated ? "/dashboard" : "/register"}>
-                            <Button>
-                                Start Building <ArrowRight size={20} />
-                            </Button>
-                        </Link>
-                        <a href="#projects">
-                            <Button variant="outline">
-                                View Showcase
-                            </Button>
-                        </a>
+                        <button className="btn-primary flex items-center gap-2">
+                            Start Building <ArrowRight size={20} />
+                        </button>
+                        <button className="btn-secondary">
+                            View Showcase
+                        </button>
                     </div>
-                </motion.div>
+                </Motion.div>
 
                 {/* Floating Code Snippet / Component Mockup */}
-                <motion.div
+                <Motion.div
                     initial={{ opacity: 0, y: 100 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4, duration: 1 }}
@@ -61,7 +52,7 @@ const Hero = () => {
                                 <h3 className="text-xl font-bold mb-4">Powerful API</h3>
                                 <p className="text-gray-500 text-sm mb-6">Integrate your stack seamlessly with our developer-first API architecture.</p>
                                 <div className="h-1 bg-gray-200 w-full overflow-hidden rounded-full">
-                                    <motion.div
+                                    <Motion.div
                                         initial={{ x: "-100%" }}
                                         animate={{ x: "0%" }}
                                         transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
@@ -88,7 +79,7 @@ const Hero = () => {
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </Motion.div>
             </div>
         </section>
     );

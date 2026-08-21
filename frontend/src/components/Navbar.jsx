@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { useAuth } from "../context/auth-context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
+import { Search, Menu, X } from "lucide-react";
 
 const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [query, setQuery] = useState("");
-    const { isAuthenticated } = useAuth();
-    const navigate = useNavigate();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -19,13 +12,6 @@ const Navbar = () => {
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        const q = query.trim();
-        if (!q) return;
-        navigate(isAuthenticated ? `/dashboard?q=${encodeURIComponent(q)}` : "/login");
-    };
 
     return (
         <nav
@@ -50,33 +36,25 @@ const Navbar = () => {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        <form
-                            onSubmit={handleSearch}
-                            role="search"
-                            className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-1.5 border border-transparent focus-within:border-black/10 focus-within:bg-white transition-all group"
-                        >
-                            <Label htmlFor="navbar-search" className="sr-only">Search projects</Label>
+                        <div className="hidden lg:flex items-center bg-gray-100 rounded-full px-4 py-1.5 border border-transparent focus-within:border-black/10 focus-within:bg-white transition-all group">
                             <Search size={16} className="text-gray-400 group-focus-within:text-black" />
-                            <Input
-                                id="navbar-search"
+                            <input
                                 type="text"
-                                value={query}
-                                onChange={(e) => setQuery(e.target.value)}
                                 placeholder="Search..."
-                                className="bg-transparent border-none rounded-none px-0 py-0 text-sm ml-2 w-32 focus:w-48 focus:ring-0 transition-all"
+                                className="bg-transparent border-none outline-none text-sm ml-2 w-32 focus:w-48 transition-all"
                             />
-                        </form>
+                        </div>
 
                         <div className="flex items-center gap-3">
                             <Link to="/login">
-                                <Button variant="nav" size="none">
+                                <button className="text-sm font-semibold px-5 py-2 hover:text-gray-600 transition-colors">
                                     Login
-                                </Button>
+                                </button>
                             </Link>
                             <Link to="/register">
-                                <Button size="none" className="text-sm px-6 py-2 shadow-md hover:shadow-lg hover:scale-100">
+                                <button className="text-sm font-semibold bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg active:scale-95">
                                     Sign Up
-                                </Button>
+                                </button>
                             </Link>
                         </div>
                     </div>

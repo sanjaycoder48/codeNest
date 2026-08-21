@@ -9,8 +9,8 @@ process.env.JWT_SECRET = 'test-secret-not-used-anywhere-real';
 // The limiter is exercised by its own test file; keep it out of the way here.
 process.env.AUTH_RATE_LIMIT_MAX = '10000';
 
-mongoose.set('sanitizeFilter', true);
-
+// sanitizeFilter is deliberately NOT set here — app.js must wire it, so this
+// suite fails if that protection is ever removed from the application.
 const app = require('../app');
 const User = require('../models/User');
 const Project = require('../models/Project');
@@ -200,4 +200,76 @@ test('an unknown API route returns a JSON 404', async () => {
     const res = await request(app).get('/api/does-not-exist');
     assert.equal(res.status, 404);
     assert.equal(res.body.message, 'Not found');
+});
+
+test('app.js wires sanitizeFilter, not just the route-level guards', async () => {
+    assert.equal(mongoose.get('sanitizeFilter'), true,
+        'requiring ../app must enable sanitizeFilter');
+});
+
+test('PATCH is a partial update and does not erase omitted fields', async () => {
+    const { body: { token } } = await register({ email: 'patch@example.com' });
+    const auth = (req) => req.set('Authorization', `Bearer ${token}`);
+
+    const created = await auth(request(app).post('/api/projects')).send({
+        title: 'Original',
+        description: 'Original description.',
+        techStack: ['React', 'Node'],
+    });
+
+    // Title only — description and techStack must survive.
+    const patched = await auth(request(app).patch(`/api/projects/${created.body._id}`))
+        .send({ title: 'Renamed' });
+
+    assert.equal(patched.status, 200, 'a partial PATCH must be accepted');
+    assert.equal(patched.body.title, 'Renamed');
+    assert.equal(patched.body.description, 'Original description.');
+    assert.deepEqual(patched.body.techStack, ['React', 'Node'], 'techStack must not be wiped');
+
+    const empty = await auth(request(app).patch(`/api/projects/${created.body._id}`)).send({});
+    assert.equal(empty.status, 400);
+    assert.match(empty.body.message, /Nothing to update/);
+});
+
+test('a negative limit does not reach the query', async () => {
+    const { body: { token } } = await register({ email: 'limit@example.com' });
+    const res = await request(app)
+        .get('/api/projects?limit=-5')
+        .set('Authorization', `Bearer ${token}`);
+
+    assert.equal(res.status, 200);
+    assert.ok(res.body.limit >= 1, `limit was ${res.body.limit}, expected >= 1`);
+});
+
+test('malformed JSON reports a client error, not a server error', async () => {
+    const res = await request(app)
+        .post('/api/auth/login')
+        .set('Content-Type', 'application/json')
+        .send('{"email": "a@b.c", ');
+
+    assert.equal(res.status, 400);
+    assert.match(res.body.message, /Malformed JSON/);
+});
+
+test('login takes similar time whether or not the email exists', async () => {
+    await register({ email: 'timing@example.com' });
+
+    const time = async (body) => {
+        const started = process.hrtime.bigint();
+        await request(app).post('/api/auth/login').send(body);
+        return Number(process.hrtime.bigint() - started) / 1e6;
+    };
+
+    let unknown = 0, known = 0;
+    for (let i = 0; i < 4; i++) {
+        unknown += await time({ email: `ghost${i}@example.com`, password: 'not-the-password' });
+        known += await time({ email: 'timing@example.com', password: 'not-the-password' });
+    }
+    unknown /= 4; known /= 4;
+
+    // Before the fix the unknown-email path skipped bcrypt entirely and answered
+    // roughly 8x faster, which enumerates registered addresses.
+    const ratio = Math.max(unknown, known) / Math.min(unknown, known);
+    assert.ok(ratio < 3,
+        `timing ratio ${ratio.toFixed(2)} (unknown ${unknown.toFixed(0)}ms vs known ${known.toFixed(0)}ms) leaks account existence`);
 });

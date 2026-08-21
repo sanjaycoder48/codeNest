@@ -8,6 +8,11 @@ const User = require('../models/User');
 // Credentials must be strings — objects here become NoSQL query operators.
 const isCredential = (v) => typeof v === 'string' && v.length > 0;
 
+// A real bcrypt hash to compare against when no user matches. Returning early
+// instead would make an unknown email answer in ~25ms and a known one in
+// ~200ms, which tells an attacker which addresses are registered.
+const DUMMY_HASH = bcrypt.hashSync('timing-equalisation-placeholder', 10);
+
 // Configurable so the test suite can raise it; 10 per 15 minutes in normal use.
 const authLimiter = rateLimit({
     windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
@@ -71,10 +76,10 @@ router.post('/login', authLimiter, async (req, res, next) => {
 
     try {
         const user = await User.findOne({ email: email.toLowerCase().trim() });
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+        // Always spend the hashing cost, so both branches take the same time.
+        const isMatch = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+        if (!user || !isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
         res.json({ token: signToken(user), user: publicUser(user) });
     } catch (err) {
