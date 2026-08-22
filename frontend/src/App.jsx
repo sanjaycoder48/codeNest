@@ -683,34 +683,29 @@ function AskTwin({ twin, open, setOpen }) {
   const submit = (event) => { event.preventDefault(); if (question.trim()) answerQuestion(question.trim()); };
 
   return (
-    <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1100 }}>
-      {/* Expanded Floating Chatbot Panel */}
+    <div style={{ position: "fixed", bottom: "16px", right: "16px", zIndex: 1100 }}>
+      {/* Compact Floating Chatbot Panel */}
       {open && (
-        <div className="ask-panel" style={{ position: "relative", bottom: "0", right: "0", width: "380px", maxHeight: "520px", boxShadow: "0 16px 40px rgba(0,0,0,0.6)", borderRadius: "12px", border: "1px solid #30363d", background: "#161b22", marginBottom: "12px" }}>
-          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid #30363d", background: "#0d1117" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span className="assistant-mark" style={{ width: "26px", height: "26px", borderRadius: "6px", background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)", display: "grid", placeItems: "center", color: "#fff" }}>
-                <Sparkles size={15} />
-              </span>
-              <div>
-                <strong style={{ fontSize: "0.88rem", color: "#f0f6fc", display: "block" }}>Ask Project Twin</strong>
-                <small style={{ fontSize: "0.68rem", color: "#8b949e" }}>AI grounded in repository evidence</small>
-              </div>
+        <div style={{ position: "relative", bottom: "0", right: "0", width: "310px", maxHeight: "360px", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", borderRadius: "10px", border: "1px solid #30363d", background: "#161b22", marginBottom: "10px", display: "flex", flexDirection: "column" }}>
+          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px", borderBottom: "1px solid #30363d", background: "#0d1117" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <Sparkles size={14} style={{ color: "#a855f7" }} />
+              <strong style={{ fontSize: "0.8rem", color: "#f0f6fc" }}>Ask AI</strong>
             </div>
-            <button className="icon-button" aria-label="Close Project Twin assistant" onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "#8b949e", cursor: "pointer" }}>
-              <X size={17} />
+            <button aria-label="Close assistant" onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "#8b949e", cursor: "pointer", padding: "2px" }}>
+              <X size={15} />
             </button>
           </header>
 
-          <div className="chat-messages" style={{ padding: "12px", maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div style={{ padding: "8px", maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
             {messages.map((message, index) => (
-              <div key={index} className={`message message-${message.role}`} style={{ background: message.role === "user" ? "#1f6feb22" : "#0d1117", border: `1px solid ${message.role === "user" ? "#1f6feb66" : "#30363d"}`, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem" }}>
-                <p style={{ whiteSpace: "pre-wrap", margin: 0, color: "#f0f6fc" }}>{message.text}</p>
+              <div key={index} style={{ background: message.role === "user" ? "#1f6feb22" : "#0d1117", border: `1px solid ${message.role === "user" ? "#1f6feb66" : "#21262d"}`, borderRadius: "6px", padding: "6px 8px", fontSize: "0.72rem", color: "#f0f6fc", lineHeight: "1.35" }}>
+                <p style={{ margin: 0 }}>{message.text}</p>
                 {message.evidence?.length > 0 && (
-                  <div className="message-evidence" style={{ marginTop: "6px", fontSize: "0.68rem", color: "#8b949e" }}>
+                  <div style={{ marginTop: "4px", fontSize: "0.65rem", color: "#8b949e" }}>
                     <span>Evidence: </span>
                     {message.evidence.map((item) => (
-                      <code key={item} style={{ background: "#161b22", padding: "1px 4px", borderRadius: "4px", color: "#58a6ff", marginLeft: "4px" }}>{item}</code>
+                      <code key={item} style={{ color: "#58a6ff" }}>{item} </code>
                     ))}
                   </div>
                 )}
@@ -718,46 +713,44 @@ function AskTwin({ twin, open, setOpen }) {
             ))}
           </div>
 
-          <div className="prompt-suggestions" style={{ display: "flex", gap: "6px", padding: "6px 12px", overflowX: "auto" }}>
-            {["Explain architecture", "Develop to next level?", "Auth location"].map((item) => (
-              <button key={item} onClick={() => answerQuestion(item)} style={{ background: "#0d1117", border: "1px solid #30363d", color: "#58a6ff", fontSize: '0.68rem', borderRadius: '12px', padding: '2px 8px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+          <div style={{ display: "flex", gap: "4px", padding: "4px 8px", overflowX: "auto" }}>
+            {["Explain architecture", "Auth location"].map((item) => (
+              <button key={item} onClick={() => answerQuestion(item)} style={{ background: "#0d1117", border: "1px solid #30363d", color: "#58a6ff", fontSize: '0.65rem', borderRadius: '10px', padding: '1px 6px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
                 {item}
               </button>
             ))}
           </div>
 
-          <form onSubmit={submit} className="chat-input" style={{ display: "flex", gap: "6px", padding: "10px 12px", borderTop: "1px solid #30363d" }}>
-            <input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about this project..." style={{ flex: 1, background: "#0d1117", border: "1px solid #30363d", color: "#f0f6fc", padding: "6px 10px", borderRadius: "6px", fontSize: "0.78rem", outline: "none" }} autoFocus />
-            <button aria-label="Send question" style={{ background: "#238636", border: "none", color: "#fff", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", display: "grid", placeItems: "center" }}>
-              <Send size={14} />
+          <form onSubmit={submit} style={{ display: "flex", gap: "4px", padding: "8px", borderTop: "1px solid #21262d" }}>
+            <input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask AI..." style={{ flex: 1, background: "#0d1117", border: "1px solid #30363d", color: "#f0f6fc", padding: "5px 8px", borderRadius: "4px", fontSize: "0.75rem", outline: "none" }} autoFocus />
+            <button aria-label="Send" style={{ background: "#238636", border: "none", color: "#fff", padding: "5px 10px", borderRadius: "4px", cursor: "pointer", display: "grid", placeItems: "center" }}>
+              <Send size={12} />
             </button>
           </form>
         </div>
       )}
 
-      {/* Floating Launcher Button in Bottom Right Corner of Every Page */}
+      {/* Sleek Compact Launcher Pill Button */}
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Toggle Project Twin AI Assistant Chatbot"
+        aria-label="Toggle AI Assistant Chatbot"
         style={{
-          background: "linear-gradient(135deg, #1f6feb 0%, #8957e5 100%)",
-          color: "#ffffff",
-          border: "none",
-          borderRadius: "24px",
-          padding: "10px 18px",
+          background: "#161b22",
+          color: "#f0f6fc",
+          border: "1px solid #30363d",
+          borderRadius: "20px",
+          padding: "6px 12px",
           fontWeight: "700",
-          fontSize: "0.82rem",
+          fontSize: "0.75rem",
           display: "flex",
           alignItems: "center",
-          gap: "8px",
+          gap: "6px",
           cursor: "pointer",
-          boxShadow: "0 6px 20px rgba(137, 87, 229, 0.4)",
-          transition: "transform 0.15s ease"
+          boxShadow: "0 4px 14px rgba(0,0,0,0.4)"
         }}
       >
-        <Sparkles size={16} />
-        <span>Ask Project Twin AI</span>
-        <span style={{ background: "rgba(255,255,255,0.2)", fontSize: "0.65rem", padding: "1px 6px", borderRadius: "10px", fontWeight: "800" }}>AI</span>
+        <Sparkles size={13} style={{ color: "#a855f7" }} />
+        <span>Ask AI</span>
       </button>
     </div>
   );
