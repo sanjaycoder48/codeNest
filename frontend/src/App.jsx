@@ -11,7 +11,7 @@ import { demoTwin, showcaseProjects } from "./data/demoTwin";
 import { analyzePublicRepository } from "./data/analyzePublicRepository";
 import { TwinSpaceApp } from "./twinspace/TwinSpaceApp";
 import { CollaborationWorkspace } from "./components/collaboration/CollaborationWorkspace";
-import { ProductGuideModal } from "./components/guide/ProductGuideModal";
+import { SingleLinePageGuide } from "./components/guide/SingleLinePageGuide";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 const tabs = ["Overview", "Intelligence", "Readiness", "Upgrades", "Deploy", "Collaborate"];
@@ -289,7 +289,7 @@ function Sidebar({ active, onChange, onImport, onSettings, mobileOpen, setMobile
   </aside>;
 }
 
-function Topbar({ twin, onSelectTwin, onImport, onMobileMenu, onSearch, theme, onToggleTheme, onChange, onOpenGuide }) {
+function Topbar({ twin, onSelectTwin, onImport, onMobileMenu, onSearch, theme, onToggleTheme, onChange }) {
   const [projectOpen, setProjectOpen] = useState(false);
   return <header className="topbar">
     <button className="mobile-menu" onClick={onMobileMenu} aria-label="Open navigation"><Menu size={19} /></button>
@@ -322,7 +322,7 @@ function Topbar({ twin, onSelectTwin, onImport, onMobileMenu, onSearch, theme, o
         </div>
       ) : null}
     </div>
-    <div className="topbar-actions"><button className="button button-ghost" onClick={onOpenGuide} style={{ gap: "4px", color: "#a855f7" }}><BookOpen size={15} /> Quick Guide</button><button className="command-search" onClick={onSearch}><Search size={16} /><span>Search project</span><kbd>Ctrl K</kbd></button><button className="icon-button mobile-search" onClick={onSearch} aria-label="Search project"><Search size={17} /></button><button className="icon-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}</button><Button variant="secondary" onClick={onImport}><Github size={16} /> Import repository</Button></div>
+    <div className="topbar-actions"><button className="command-search" onClick={onSearch}><Search size={16} /><span>Search project</span><kbd>Ctrl K</kbd></button><button className="icon-button mobile-search" onClick={onSearch} aria-label="Search project"><Search size={17} /></button><button className="icon-button theme-toggle" onClick={onToggleTheme} aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}>{theme === "dark" ? <Moon size={17} /> : <Sun size={17} />}</button><Button variant="secondary" onClick={onImport}><Github size={16} /> Import repository</Button></div>
   </header>;
 }
 
@@ -770,7 +770,6 @@ export default function App() {
   });
   const [importOpen, setImportOpen] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(() => !localStorage.getItem("project-twin-guided"));
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aiInsight, setAIInsight] = useState(null);
@@ -799,11 +798,11 @@ export default function App() {
     const handleKeyboard = (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setSearchOpen(true); }
       if ((event.ctrlKey || event.metaKey) && event.key === "Enter") { event.preventDefault(); setAskOpen(true); }
-      if (event.key === "Escape") { setSearchOpen(false); setSettingsOpen(false); setAskOpen(false); setAIInsight(null); setGuideOpen(false); }
+      if (event.key === "Escape") { setSearchOpen(false); setSettingsOpen(false); setAskOpen(false); setAIInsight(null); }
     };
     window.addEventListener("keydown", handleKeyboard);
     return () => window.removeEventListener("keydown", handleKeyboard);
   }, []);
   const pages = { Overview: <Overview twin={twin} setActive={changeView} onAI={openAI} opened={overviewOpen} onOpen={openProject} onBack={() => setOverviewOpen(false)} view={projectView} setView={setProjectView} requestConfirm={requestConfirm} notify={notify} onAsk={() => setAskOpen(true)} />, Discover: <Discover twin={twin} setActive={changeView} />, Activity: <ActivityView twin={twin} setActive={changeView} notify={notify} />, Intelligence: <Intelligence twin={twin} onAI={openAI} />, Readiness: <Readiness twin={twin} onAI={openAI} />, Upgrades: <Upgrades twin={twin} notify={notify} requestConfirm={requestConfirm} />, Deploy: <Deploy twin={twin} requestConfirm={requestConfirm} notify={notify} onAI={openAI} />, Collaborate: <CollaborationWorkspace twin={twin} /> };
-  return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onSelectTwin={openProject} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} onOpenGuide={() => setGuideOpen(true)} /><main className={`main-content ${active === "TwinSpace" ? "main-content-full" : ""}`}>{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} /><ProductGuideModal open={guideOpen} onClose={() => setGuideOpen(false)} onNavigate={changeView} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<AIInsightDialog insight={aiInsight} onClose={() => setAIInsight(null)} onNavigate={changeView} onAsk={() => setAskOpen(true)} /><SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
+  return <div className="app-shell"><Sidebar active={active} onChange={changeView} onImport={() => setImportOpen(true)} onSettings={() => setSettingsOpen(true)} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} unreadActivity={unreadActivity} /><div className="workspace"><Topbar twin={twin} onSelectTwin={openProject} onImport={() => setImportOpen(true)} onMobileMenu={() => setMobileOpen(true)} onSearch={() => setSearchOpen(true)} theme={theme} onToggleTheme={() => setTheme((value) => value === "dark" ? "light" : "dark")} onChange={changeView} /><main className={`main-content ${active === "TwinSpace" ? "main-content-full" : ""}`}><SingleLinePageGuide tab={active} />{pages[active]}</main></div><AskTwin key={twin.id} twin={twin} open={askOpen} setOpen={setAskOpen} />{searchOpen ? <SearchDialog twin={twin} open onClose={() => setSearchOpen(false)} onSelect={changeView} /> : null}<AIInsightDialog insight={aiInsight} onClose={() => setAIInsight(null)} onNavigate={changeView} onAsk={() => setAskOpen(true)} /><SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} theme={theme} onTheme={setTheme} notify={notify} /><ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onComplete={completeImport} /><ConfirmDialog state={confirm} onClose={() => setConfirm(null)} onConfirm={() => { confirm.actionHandler(); setConfirm(null); }} /><Toast message={toast} />{mobileOpen && <div className="sidebar-scrim" onClick={() => setMobileOpen(false)} />}</div>;
 }
