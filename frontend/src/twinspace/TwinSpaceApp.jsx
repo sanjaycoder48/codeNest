@@ -3,7 +3,7 @@ import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { CenterEditor } from './components/CenterEditor';
 import { RightSidebar } from './components/RightSidebar';
-import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal } from './components/Modals';
+import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal, ConnectDeveloperModal } from './components/Modals';
 import { IntelligenceReport } from './components/IntelligenceReport';
 import { io } from 'socket.io-client';
 import {
@@ -18,7 +18,9 @@ import {
   ShieldCheck,
   Cpu,
   Layers,
-  Database
+  Database,
+  Terminal,
+  Activity
 } from 'lucide-react';
 
 export function TwinSpaceApp() {
@@ -27,7 +29,7 @@ export function TwinSpaceApp() {
   const [syncStage, setSyncStage] = useState('');
 
   // Domain State
-  const [users] = useState([
+  const [users, setUsers] = useState([
     { id: 'usr_vikash', username: 'Vikash', name: 'Vikash L', role: 'Owner', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces', activeFile: 'frontend/pages/Checkout.tsx', status: 'active' },
     { id: 'usr_priya', username: 'Priya', name: 'Priya Sharma', role: 'Lead Developer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=faces', activeFile: 'backend/auth/AuthService.ts', status: 'active' },
     { id: 'usr_rahul', username: 'Rahul', name: 'Rahul Verma', role: 'Full-Stack Developer', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces', activeFile: 'backend/payments/PaymentService.ts', status: 'active' },
@@ -190,6 +192,20 @@ export function Checkout() {
   const [selectedPR, setSelectedPR] = useState(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tourModalOpen, setTourModalOpen] = useState(false);
+  const [connectDevModalOpen, setConnectDevModalOpen] = useState(false);
+
+  const handleDeveloperConnected = (newDev) => {
+    setUsers(prev => {
+      const exists = prev.some(u => u.id === newDev.id || u.username.toLowerCase() === newDev.username.toLowerCase());
+      if (exists) return prev.map(u => (u.id === newDev.id || u.username.toLowerCase() === newDev.username.toLowerCase()) ? newDev : u);
+      return [...prev, newDev];
+    });
+    setCurrentUser(newDev);
+    setActivities(prev => [
+      { id: 'act_' + Date.now(), user: newDev.username, action: 'connected GitHub developer profile', target: newDev.name, timestamp: 'Just now' },
+      ...prev
+    ]);
+  };
 
   // Sync animation handler
   const startRepoSync = (repo) => {
@@ -376,6 +392,7 @@ export function Checkout() {
             onOpenPR={() => setCreatePRModalOpen(true)}
             onOpenReport={() => setReportModalOpen(true)}
             onOpenDemoTour={() => setTourModalOpen(true)}
+            onOpenConnectDev={() => setConnectDevModalOpen(true)}
             onSearch={() => alert('Repository Search: Ctrl+K active')}
           />
 
@@ -442,6 +459,7 @@ export function Checkout() {
       <PRReviewModal pr={selectedPR} open={!!selectedPR} onClose={() => setSelectedPR(null)} onMerge={handleMergePR} />
       <IntelligenceReport open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
       <DemoTourModal open={tourModalOpen} onClose={() => setTourModalOpen(false)} />
+      <ConnectDeveloperModal open={connectDevModalOpen} onClose={() => setConnectDevModalOpen(false)} onDeveloperConnected={handleDeveloperConnected} />
     </div>
   );
 }

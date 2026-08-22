@@ -7,6 +7,18 @@ router.get('/users', (req, res) => {
   res.json({ users: twinspaceService.getDemoUsers() });
 });
 
+// POST connect developer from GitHub profile
+router.post('/developers/github', async (req, res) => {
+  try {
+    const { username } = req.body || {};
+    if (!username) return res.status(400).json({ message: 'GitHub username or profile URL required' });
+    const developer = await twinspaceService.fetchGitHubDeveloper(username);
+    res.json({ status: 'success', developer, users: twinspaceService.getState().users });
+  } catch (err) {
+    res.status(500).json({ message: err.message || 'Failed to fetch GitHub developer profile' });
+  }
+});
+
 // Get user repositories
 router.get('/repositories', (req, res) => {
   res.json({ repositories: twinspaceService.getRepositories() });

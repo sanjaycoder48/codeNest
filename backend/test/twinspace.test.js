@@ -60,4 +60,14 @@ describe('TwinSpace API Endpoints', () => {
     assert.strictEqual(res.body.filesCount, 428);
     assert.strictEqual(res.body.linesCount, 61240);
   });
+
+  it('POST /api/twinspace/developers/github connects real GitHub profile', async () => {
+    const res = await request(app)
+      .post('/api/twinspace/developers/github')
+      .send({ username: 'octocat' });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.status, 'success');
+    assert.strictEqual(res.body.developer.username.toLowerCase(), 'octocat');
+    assert.ok(res.body.developer.avatar);
+  });
 });

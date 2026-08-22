@@ -25,6 +25,7 @@ export function TopBar({
   onOpenPR,
   onOpenReport,
   onOpenDemoTour,
+  onOpenConnectDev,
   onSearch
 }) {
   const [userDropdown, setUserDropdown] = useState(false);
@@ -304,6 +305,26 @@ export function TopBar({
                   </div>
                 </button>
               ))}
+              <div style={{ height: '1px', background: '#30363d', margin: '4px 0' }} />
+              <button
+                onClick={() => { setUserDropdown(false); onOpenConnectDev(); }}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '5px 6px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#2f81f7',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Plus size={13} /> Connect GitHub Developer
+              </button>
             </div>
           )}
         </div>

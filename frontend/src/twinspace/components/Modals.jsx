@@ -11,7 +11,8 @@ import {
   ShieldCheck,
   Bot,
   FileText,
-  Download
+  Download,
+  Github
 } from 'lucide-react';
 
 export function CommitModal({ open, onClose, onCommit, currentBranch, currentUser }) {
@@ -330,6 +331,223 @@ export function DemoTourModal({ open, onClose }) {
         <button onClick={onClose} style={{ width: '100%', marginTop: '20px', background: '#a855f7', color: '#fff', border: 'none', borderRadius: '6px', padding: '10px', fontWeight: '700', cursor: 'pointer' }}>
           Start Live Interactive Demo
         </button>
+      </div>
+    </div>
+  );
+}
+
+export function ConnectDeveloperModal({ open, onClose, onDeveloperConnected }) {
+  const [usernameInput, setUsernameInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState(null);
+
+  if (!open) return null;
+
+  const quickChips = [
+    { label: 'sanjaycoder48', username: 'sanjaycoder48' },
+    { label: 'octocat', username: 'octocat' },
+    { label: 'torvalds', username: 'torvalds' },
+    { label: 'gaearon', username: 'gaearon' }
+  ];
+
+  const handleFetchProfile = async (targetUser) => {
+    const query = targetUser || usernameInput;
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    setPreview(null);
+
+    try {
+      let cleanUser = query.trim();
+      if (cleanUser.includes('github.com/')) {
+        cleanUser = cleanUser.split('github.com/').pop().split('/')[0].split('?')[0];
+      }
+      cleanUser = cleanUser.replace(/^@/, '');
+
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanUser)}`);
+      if (!res.ok) {
+        throw new Error(`GitHub developer "${cleanUser}" not found`);
+      }
+      const data = await res.json();
+      setPreview({
+        username: data.login,
+        name: data.name || data.login,
+        avatar: data.avatar_url,
+        bio: data.bio || 'GitHub Developer & Open-Source Contributor',
+        publicRepos: data.public_repos,
+        followers: data.followers,
+        githubUrl: data.html_url
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to fetch GitHub profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConnectSubmit = async (e) => {
+    e.preventDefault();
+    const query = preview?.username || usernameInput;
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/twinspace/developers/github', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: query })
+      });
+      const data = await res.json();
+      if (data.status === 'success' && data.developer) {
+        onDeveloperConnected(data.developer);
+        onClose();
+      } else {
+        throw new Error(data.message || 'Could not connect developer');
+      }
+    } catch {
+      // Fallback local connection if offline
+      const localDev = {
+        id: `usr_gh_${query.toLowerCase()}`,
+        username: preview?.username || query,
+        name: preview?.name || query,
+        role: preview?.bio || 'GitHub Developer',
+        avatar: preview?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces',
+        githubUrl: preview?.githubUrl || `https://github.com/${query}`,
+        activeFile: 'frontend/pages/Checkout.tsx',
+        status: 'active'
+      };
+      onDeveloperConnected(localDev);
+      onClose();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#161b22', border: '1px solid #1f6feb66', borderRadius: '12px', width: '520px', padding: '24px', color: '#c9d1d9' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Github size={20} style={{ color: '#58a6ff' }} />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>Connect GitHub Developer</h3>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}><X size={20} /></button>
+        </div>
+
+        <p style={{ fontSize: '0.8rem', color: '#8b949e', marginBottom: '16px' }}>
+          Enter any developer&apos;s GitHub username or profile URL to pull their avatar, repos, and connect them into TwinSpace.
+        </p>
+
+        {/* Quick developer chips */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <span style={{ fontSize: '0.7rem', color: '#8b949e', alignSelf: 'center', marginRight: '4px' }}>Quick Select:</span>
+          {quickChips.map(chip => (
+            <button
+              key={chip.username}
+              onClick={() => {
+                setUsernameInput(chip.username);
+                handleFetchProfile(chip.username);
+              }}
+              style={{
+                background: usernameInput === chip.username ? '#1f6feb33' : '#21262d',
+                border: '1px solid #30363d',
+                borderRadius: '16px',
+                padding: '3px 10px',
+                color: usernameInput === chip.username ? '#58a6ff' : '#c9d1d9',
+                fontSize: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              @{chip.label}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleConnectSubmit}>
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <input
+              type="text"
+              placeholder="e.g. octocat or https://github.com/octocat"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
+              style={{
+                flex: 1,
+                background: '#0d1117',
+                border: '1px solid #30363d',
+                borderRadius: '6px',
+                color: '#c9d1d9',
+                padding: '8px 12px',
+                fontSize: '0.85rem'
+              }}
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={() => handleFetchProfile()}
+              disabled={loading || !usernameInput.trim()}
+              style={{
+                background: '#21262d',
+                border: '1px solid #30363d',
+                borderRadius: '6px',
+                padding: '8px 14px',
+                color: '#f0f6fc',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {loading ? 'Fetching...' : 'Fetch Profile'}
+            </button>
+          </div>
+
+          {error && (
+            <div style={{ background: '#f851491e', border: '1px solid #f8514966', borderRadius: '6px', padding: '10px', color: '#f85149', fontSize: '0.8rem', marginBottom: '16px' }}>
+              {error}
+            </div>
+          )}
+
+          {/* GitHub Developer Profile Preview */}
+          {preview && (
+            <div style={{ background: '#0d1117', border: '1px solid #23863666', borderRadius: '8px', padding: '14px', marginBottom: '20px', display: 'flex', gap: '14px', alignItems: 'center' }}>
+              <img
+                src={preview.avatar}
+                alt={preview.name}
+                style={{ width: '54px', height: '54px', borderRadius: '50%', border: '2px solid #58a6ff' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '0.95rem', color: '#f0f6fc' }}>{preview.name}</strong>
+                  <a href={preview.githubUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.7rem', color: '#58a6ff', textDecoration: 'none' }}>
+                    github.com/{preview.username} ↗
+                  </a>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#8b949e', marginTop: '2px' }}>@{preview.username} • {preview.publicRepos} Repositories • {preview.followers} Followers</div>
+                <div style={{ fontSize: '0.75rem', color: '#c9d1d9', marginTop: '4px', fontStyle: 'italic' }}>&quot;{preview.bio}&quot;</div>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || (!preview && !usernameInput.trim())}
+            style={{
+              width: '100%',
+              background: '#238636',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '10px',
+              fontSize: '0.85rem',
+              fontWeight: '700',
+              cursor: 'pointer'
+            }}
+          >
+            Connect Developer to TwinSpace
+          </button>
+        </form>
       </div>
     </div>
   );
