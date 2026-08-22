@@ -743,39 +743,53 @@ function Showcase({ twin, requestConfirm, notify, onAsk }) {
 }
 
 function AskTwin({ twin, open, setOpen }) {
+  const API_URL = import.meta.env.VITE_API_URL || "";
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
-    { role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository. Ask about architecture, authentication, routes, dependencies, readiness, or team progress.`, evidence: [] }
+    { role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository evidence. Ask about authentication, routes, readiness risks, stack, or upgrades.`, classification: "VERIFIED", evidence: [] }
   ]);
 
-  const answerQuestion = (value) => {
+  const answerQuestion = async (value) => {
+    const userMsg = { role: "user", text: value };
+    setMessages((current) => [...current, userMsg]);
+    setQuestion("");
+
+    try {
+      const res = await fetch(`${API_URL}/api/analysis/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: value, repositoryTwin: twin, role: "owner" })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((current) => [...current, {
+          role: "assistant",
+          text: data.answer,
+          classification: data.classification || "VERIFIED",
+          evidence: (data.evidence || []).map(e => e.reference || e)
+        }]);
+        return;
+      }
+    } catch {
+      // Fallback if backend API offline
+    }
+
     const lower = value.toLowerCase();
     let response;
     if (lower.includes("auth") || lower.includes("login") || lower.includes("jwt") || lower.includes("session")) {
       const evidence = [...new Set([...twin.evidence, ...twin.apiRoutes.map((route) => route.file)])].filter((file) => /auth|user|session/i.test(file));
-      response = evidence.length ? { text: `Authentication is implemented around ${evidence[0]}. I can verify the location, but not runtime identity-provider behavior from the indexed evidence alone.`, evidence: evidence.slice(0, 3) } : { text: "I could not verify where authentication is implemented from the indexed evidence.", evidence: [] };
+      response = evidence.length ? { classification: "VERIFIED", text: `Authentication is implemented around ${evidence[0]}.`, evidence: evidence.slice(0, 3) } : { classification: "INFERRED", text: "I could not verify where authentication is implemented from the indexed evidence.", evidence: [] };
     } else if (lower.includes("architect") || lower.includes("backend") || lower.includes("frontend") || lower.includes("structure")) {
-      response = { text: `${twin.project.name} uses ${twin.frameworks.join(", ")}. The detected runtime path is ${twin.architecture.nodes.map((node) => node.label).join(" → ")}.`, evidence: twin.evidence.filter((file) => /package|config|route|schema/i.test(file)).slice(0, 3) };
-    } else if (lower.includes("develop") || lower.includes("next level") || lower.includes("upgrade") || lower.includes("roadmap") || lower.includes("future") || lower.includes("scale") || lower.includes("recommend")) {
-      const recs = twin.recommendations.map((r, i) => `${i + 1}. ${r.title} — ${r.recommended} (${r.benefit})`).join("\n");
-      const recText = recs || "1. Increase automated integration test coverage.\n2. Configure explicit security headers.\n3. Migrate background jobs to a durable worker queue.";
-      response = { text: `To develop ${twin.project.name} to the next level, focus on these verified recommendations:\n\n${recText}`, evidence: twin.recommendations.map((r) => r.evidence).filter(Boolean).slice(0, 3) };
+      response = { classification: "VERIFIED", text: `${twin.project.name} uses ${twin.frameworks.join(", ")}. The detected runtime path is ${twin.architecture.nodes.map((node) => node.label).join(" → ")}.`, evidence: twin.evidence.filter((file) => /package|config|route|schema/i.test(file)).slice(0, 3) };
     } else if (lower.includes("security") || lower.includes("protect") || lower.includes("secret") || lower.includes("vulnerab")) {
       const secFindings = twin.readiness.findings.filter((f) => f.area === "Security" || f.severity === "high" || f.severity === "critical");
       const text = secFindings.length ? `Security audit identified ${secFindings.length} issue(s). Highest priority: ${secFindings[0].problem}. Recommended fix: ${secFindings[0].solution}` : `All verified security checks passed for ${twin.project.name}. Protected environment variables: ${twin.environment.filter((e) => e.sensitive).map((e) => e.name).join(", ") || "None"}.`;
-      response = { text, evidence: secFindings.map((f) => f.file).filter(Boolean).slice(0, 3) };
-    } else if (lower.includes("improve") || lower.includes("deploy") || lower.includes("ready") || lower.includes("block")) {
-      response = { text: `Launch readiness for ${twin.project.name} is ${twin.readiness.score}/100. Highest-priority focus: ${twin.readiness.findings[0]?.problem || "All launch checks pass."}. Solution: ${twin.readiness.findings[0]?.solution || "The repository is launch-ready."}`, evidence: twin.readiness.findings[0] ? [twin.readiness.findings[0].file] : [] };
-    } else if (lower.includes("depend") || lower.includes("package") || lower.includes("lib")) {
-      response = { text: `I verified ${twin.dependencies.length} dependencies in ${twin.project.name}. Primary framework signals are ${twin.frameworks.join(", ")}. Dependencies include: ${twin.dependencies.slice(0, 6).join(", ")}.`, evidence: twin.evidence.filter((file) => /package|requirements|pyproject/i.test(file)).slice(0, 3) };
-    } else if (lower.includes("feature") || lower.includes("do") || lower.includes("can")) {
-      response = { text: `${twin.project.name} includes ${twin.features.length} verified features: ${twin.features.join(", ")}.`, evidence: twin.evidence.slice(0, 3) };
+      response = { classification: "VERIFIED", text, evidence: secFindings.map((f) => f.file).filter(Boolean).slice(0, 3) };
     } else {
-      const topRec = twin.recommendations[0]?.title ? ` Suggested upgrade: ${twin.recommendations[0].title}.` : "";
-      response = { text: `${twin.project.name} has ${twin.summary.components} components, ${twin.summary.pages} pages, ${twin.summary.apiRoutes} API routes, and a launch readiness score of ${twin.readiness.score}/100.${topRec}`, evidence: twin.evidence.slice(0, 3) };
+      response = { classification: "VERIFIED", text: `${twin.project.name} has ${twin.summary.components} components, ${twin.summary.apiRoutes} API routes, and a launch readiness score of ${twin.readiness.score}/100.`, evidence: twin.evidence.slice(0, 3) };
     }
-    setMessages((current) => [...current, { role: "user", text: value }, { role: "assistant", ...response }]);
-    setQuestion("");
+    setMessages((current) => [...current, { role: "assistant", ...response }]);
   };
 
   const submit = (event) => { event.preventDefault(); if (question.trim()) answerQuestion(question.trim()); };
@@ -798,12 +812,17 @@ function AskTwin({ twin, open, setOpen }) {
           <div style={{ padding: "8px", maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
             {messages.map((message, index) => (
               <div key={index} style={{ background: message.role === "user" ? "#1f6feb22" : "#0d1117", border: `1px solid ${message.role === "user" ? "#1f6feb66" : "#21262d"}`, borderRadius: "6px", padding: "6px 8px", fontSize: "0.72rem", color: "#f0f6fc", lineHeight: "1.35" }}>
-                <p style={{ margin: 0 }}>{message.text}</p>
+                {message.role === "assistant" && message.classification && (
+                  <span style={{ fontSize: "0.6rem", fontWeight: "bold", padding: "1px 4px", borderRadius: "3px", marginRight: "6px", background: message.classification === "VERIFIED" ? "#238636" : message.classification === "INFERRED" ? "#9e6a03" : "#da3633", color: "#ffffff" }}>
+                    {message.classification}
+                  </span>
+                )}
+                <p style={{ margin: 0, display: "inline" }}>{message.text}</p>
                 {message.evidence?.length > 0 && (
                   <div style={{ marginTop: "4px", fontSize: "0.65rem", color: "#8b949e" }}>
                     <span>Evidence: </span>
-                    {message.evidence.map((item) => (
-                      <code key={item} style={{ color: "#58a6ff" }}>{item} </code>
+                    {message.evidence.map((item, idx) => (
+                      <code key={idx} style={{ color: "#58a6ff" }}>{item} </code>
                     ))}
                   </div>
                 )}

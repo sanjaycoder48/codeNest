@@ -101,5 +101,17 @@ router.post('/deployment/diagnose', (req, res) => {
     });
 });
 
+const { answerProjectQuestion } = require('../services/askTwinService');
+
+router.post('/ask', (req, res) => {
+    const { question = '', repositoryTwin = null, role = 'public' } = req.body || {};
+    if (!question || typeof question !== 'string') {
+        return res.status(400).json({ message: 'Question parameter is required.' });
+    }
+
+    const answerData = answerProjectQuestion({ question, repositoryTwin, role });
+    res.json(answerData);
+});
+
 module.exports = router;
 module.exports.__jobs = jobs;
