@@ -138,4 +138,21 @@ router.get('/analysis/report', (req, res) => {
   res.json(twinspaceService.getWholeRepoReport());
 });
 
+const { generatePublicShowcase } = require('../services/showcaseGenerator');
+
+// Auto Showcase Generator Endpoint
+router.post('/showcase/generate', (req, res) => {
+  const { repositoryTwin, deploymentUrl } = req.body || {};
+  if (!repositoryTwin) {
+    return res.status(400).json({ message: 'repositoryTwin context is required.' });
+  }
+
+  try {
+    const showcase = generatePublicShowcase({ repositoryTwin, deploymentUrl });
+    res.json(showcase);
+  } catch (err) {
+    res.status(500).json({ message: err.message || 'Failed to generate showcase.' });
+  }
+});
+
 module.exports = router;
