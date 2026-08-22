@@ -68,7 +68,8 @@ export function LeftSidebar({
 
   return (
     <aside className="twinspace-left-sidebar" style={{
-      width: '300px',
+      width: '260px',
+      flexShrink: 0,
       background: '#161b22',
       borderRight: '1px solid #30363d',
       display: 'flex',

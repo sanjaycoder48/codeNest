@@ -23,7 +23,8 @@ export function RightSidebar({
 
   return (
     <aside className="twinspace-right-sidebar" style={{
-      width: '320px',
+      width: '280px',
+      flexShrink: 0,
       background: '#161b22',
       borderLeft: '1px solid #30363d',
       display: 'flex',

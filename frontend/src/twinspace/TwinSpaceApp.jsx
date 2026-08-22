@@ -304,7 +304,7 @@ export function Checkout() {
   }, [currentUser, activeTabPath]);
 
   return (
-    <div className="twinspace-app-container" style={{ width: '100%', height: 'calc(100vh - 60px)', background: '#0d1117', color: '#c9d1d9', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div className="twinspace-app-container" style={{ width: '100%', height: '100%', background: '#0d1117', color: '#c9d1d9', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       {/* VIEW 1: REPOSITORY SELECTION SCREEN */}
       {viewState === 'repo-select' && (
         <div style={{ flex: 1, padding: '40px 20px', maxWidth: '900px', margin: '0 auto', width: '100%' }}>

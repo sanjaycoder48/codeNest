@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   GitBranch,
   Search,
-  CheckCircle2,
   GitCommit,
   UploadCloud,
   GitPullRequest,
@@ -45,45 +44,46 @@ export function TopBar({
 
   return (
     <header className="twinspace-topbar" style={{
-      height: '56px',
+      height: '52px',
       background: '#0d1117',
       borderBottom: '1px solid #30363d',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 16px',
+      padding: '0 14px',
       color: '#c9d1d9',
-      fontSize: '0.85rem'
+      fontSize: '0.8rem',
+      flexShrink: 0
     }}>
-      {/* Left section: Identity & Repo & Branch */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', color: '#f0f6fc' }}>
+      {/* Left section: Branding, Repo & Branch */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', color: '#f0f6fc', flexShrink: 0 }}>
           <div style={{
-            width: '28px',
-            height: '28px',
+            width: '26px',
+            height: '26px',
             borderRadius: '6px',
             background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '12px',
+            fontSize: '11px',
             fontWeight: '900',
             color: '#fff'
           }}>TS</div>
-          <span>TwinSpace</span>
-          <span style={{ fontSize: '0.75rem', color: '#8b949e', fontWeight: '400' }}>by Project Twin</span>
+          <span style={{ fontSize: '0.85rem' }}>TwinSpace</span>
+          <span style={{ fontSize: '0.7rem', color: '#8b949e', fontWeight: '400' }}>by Project Twin</span>
         </div>
 
-        <div style={{ height: '20px', width: '1px', background: '#30363d' }} />
+        <div style={{ height: '18px', width: '1px', background: '#30363d', flexShrink: 0 }} />
 
-        {/* Repository selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ color: '#8b949e' }}>Repo:</span>
-          <strong style={{ color: '#58a6ff' }}>{repo?.fullName || 'demo/ShopSphere'}</strong>
+        {/* Repository info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+          <span style={{ color: '#8b949e', fontSize: '0.75rem' }}>Repo:</span>
+          <strong style={{ color: '#58a6ff', fontSize: '0.8rem' }}>{repo?.fullName || 'demo/ShopSphere'}</strong>
         </div>
 
-        {/* Branch dropdown */}
-        <div style={{ relative: 'relative' }}>
+        {/* Branch Selector */}
+        <div style={{ position: 'relative', flexShrink: 0 }}>
           <button
             onClick={() => setBranchDropdown(!branchDropdown)}
             style={{
@@ -93,30 +93,30 @@ export function TopBar({
               background: '#21262d',
               border: '1px solid #30363d',
               borderRadius: '6px',
-              padding: '4px 10px',
+              padding: '3px 9px',
               color: '#c9d1d9',
-              fontSize: '0.8rem',
+              fontSize: '0.75rem',
               cursor: 'pointer'
             }}
           >
-            <GitBranch size={14} style={{ color: '#238636' }} />
+            <GitBranch size={13} style={{ color: '#238636' }} />
             <strong>{currentBranch}</strong>
           </button>
 
           {branchDropdown && (
             <div style={{
               position: 'absolute',
-              top: '48px',
-              left: '260px',
+              top: '36px',
+              left: 0,
               zIndex: 100,
               background: '#161b22',
               border: '1px solid #30363d',
               borderRadius: '8px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-              width: '260px',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              width: '240px',
               padding: '8px'
             }}>
-              <div style={{ fontSize: '0.75rem', color: '#8b949e', padding: '4px 8px', fontWeight: '600' }}>SWITCH BRANCH</div>
+              <div style={{ fontSize: '0.7rem', color: '#8b949e', padding: '4px 6px', fontWeight: '600' }}>SWITCH BRANCH</div>
               {branches.map(b => (
                 <button
                   key={b.name}
@@ -124,12 +124,12 @@ export function TopBar({
                   style={{
                     width: '100%',
                     textAlign: 'left',
-                    padding: '6px 8px',
+                    padding: '5px 8px',
                     background: b.name === currentBranch ? '#1f6feb22' : 'transparent',
                     border: 'none',
                     borderRadius: '4px',
                     color: b.name === currentBranch ? '#58a6ff' : '#c9d1d9',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -137,7 +137,7 @@ export function TopBar({
                   }}
                 >
                   <span>{b.name}</span>
-                  {b.isDefault && <span style={{ fontSize: '0.65rem', background: '#30363d', padding: '1px 5px', borderRadius: '4px' }}>default</span>}
+                  {b.isDefault && <span style={{ fontSize: '0.6rem', background: '#30363d', padding: '1px 4px', borderRadius: '4px' }}>default</span>}
                 </button>
               ))}
               <div style={{ height: '1px', background: '#30363d', margin: '6px 0' }} />
@@ -147,21 +147,21 @@ export function TopBar({
                   style={{
                     width: '100%',
                     textAlign: 'left',
-                    padding: '6px 8px',
+                    padding: '5px 8px',
                     background: 'transparent',
                     border: 'none',
                     color: '#2f81f7',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px'
                   }}
                 >
-                  <Plus size={14} /> Create Branch
+                  <Plus size={13} /> Create Branch
                 </button>
               ) : (
-                <form onSubmit={handleCreateBranchSubmit} style={{ display: 'flex', gap: '4px', padding: '4px' }}>
+                <form onSubmit={handleCreateBranchSubmit} style={{ display: 'flex', gap: '4px', padding: '2px' }}>
                   <input
                     type="text"
                     placeholder="branch-name"
@@ -195,28 +195,29 @@ export function TopBar({
             background: '#161b22',
             border: '1px solid #30363d',
             borderRadius: '6px',
-            padding: '4px 10px',
+            padding: '3px 8px',
             color: '#8b949e',
             fontSize: '0.75rem',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            flexShrink: 0
           }}
         >
-          <Search size={13} />
+          <Search size={12} />
           <span>Search repo (Ctrl+K)</span>
         </button>
       </div>
 
-      {/* Right section: Collaborators Presence, User Switcher, & Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Right section: Collaborators Presence, User Switcher, & Action Buttons */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
         {/* Active Collaborators Presence */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '-6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '4px' }}>
           {users.map(u => (
             <div
               key={u.id}
               title={`${u.name} (${u.role}) — Editing ${u.activeFile}`}
               style={{
                 position: 'relative',
-                marginLeft: '-6px',
+                marginLeft: '-5px',
                 border: u.id === currentUser?.id ? '2px solid #58a6ff' : '2px solid #0d1117',
                 borderRadius: '50%'
               }}
@@ -224,14 +225,14 @@ export function TopBar({
               <img
                 src={u.avatar}
                 alt={u.name}
-                style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+                style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover', display: 'block' }}
               />
               <span style={{
                 position: 'absolute',
                 bottom: '0',
                 right: '0',
-                width: '7px',
-                height: '7px',
+                width: '6px',
+                height: '6px',
                 borderRadius: '50%',
                 background: '#238636',
                 border: '1px solid #0d1117'
@@ -247,35 +248,36 @@ export function TopBar({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '5px',
               background: '#1f6feb22',
               border: '1px solid #1f6feb66',
-              borderRadius: '20px',
-              padding: '3px 10px',
+              borderRadius: '16px',
+              padding: '3px 8px',
               color: '#58a6ff',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: '600',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
             }}
           >
-            <UserCheck size={13} />
+            <UserCheck size={12} />
             <span>Developer: {currentUser?.username || 'Vikash'}</span>
           </button>
 
           {userDropdown && (
             <div style={{
               position: 'absolute',
-              top: '40px',
-              right: '0',
+              top: '36px',
+              right: 0,
               zIndex: 100,
               background: '#161b22',
               border: '1px solid #30363d',
               borderRadius: '8px',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-              width: '220px',
-              padding: '8px'
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              width: '210px',
+              padding: '6px'
             }}>
-              <div style={{ fontSize: '0.7rem', color: '#8b949e', padding: '4px 8px', fontWeight: '600' }}>SWITCH DEVELOPER ACCOUNT</div>
+              <div style={{ fontSize: '0.68rem', color: '#8b949e', padding: '4px 6px', fontWeight: '600' }}>SWITCH DEVELOPER ACCOUNT</div>
               {users.map(u => (
                 <button
                   key={u.id}
@@ -283,12 +285,12 @@ export function TopBar({
                   style={{
                     width: '100%',
                     textAlign: 'left',
-                    padding: '6px 8px',
+                    padding: '5px 6px',
                     background: u.id === currentUser?.id ? '#1f6feb33' : 'transparent',
                     border: 'none',
-                    borderRadius: '6px',
+                    borderRadius: '5px',
                     color: u.id === currentUser?.id ? '#58a6ff' : '#c9d1d9',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -297,8 +299,8 @@ export function TopBar({
                 >
                   <img src={u.avatar} alt={u.name} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <strong style={{ fontSize: '0.8rem' }}>{u.name}</strong>
-                    <span style={{ fontSize: '0.65rem', color: '#8b949e' }}>{u.role}</span>
+                    <strong style={{ fontSize: '0.75rem' }}>{u.name}</strong>
+                    <span style={{ fontSize: '0.62rem', color: '#8b949e' }}>{u.role}</span>
                   </div>
                 </button>
               ))}
@@ -306,7 +308,7 @@ export function TopBar({
           )}
         </div>
 
-        <div style={{ height: '20px', width: '1px', background: '#30363d' }} />
+        <div style={{ height: '18px', width: '1px', background: '#30363d' }} />
 
         {/* Git Action Buttons */}
         <button
@@ -314,18 +316,19 @@ export function TopBar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             background: '#21262d',
             border: '1px solid #30363d',
             borderRadius: '6px',
-            padding: '5px 10px',
+            padding: '4px 9px',
             color: '#c9d1d9',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: '600',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <GitCommit size={14} style={{ color: '#a855f7' }} />
+          <GitCommit size={13} style={{ color: '#a855f7' }} />
           <span>Commit</span>
         </button>
 
@@ -334,18 +337,19 @@ export function TopBar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             background: '#21262d',
             border: '1px solid #30363d',
             borderRadius: '6px',
-            padding: '5px 10px',
+            padding: '4px 9px',
             color: '#c9d1d9',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: '600',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <UploadCloud size={14} style={{ color: '#38bdf8' }} />
+          <UploadCloud size={13} style={{ color: '#38bdf8' }} />
           <span>Push</span>
         </button>
 
@@ -354,18 +358,19 @@ export function TopBar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             background: '#238636',
             border: 'none',
             borderRadius: '6px',
-            padding: '5px 12px',
+            padding: '4px 10px',
             color: '#ffffff',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: '600',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <GitPullRequest size={14} />
+          <GitPullRequest size={13} />
           <span>Pull Request</span>
         </button>
 
@@ -375,18 +380,19 @@ export function TopBar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             background: '#30363d',
             border: 'none',
             borderRadius: '6px',
-            padding: '5px 10px',
+            padding: '4px 9px',
             color: '#f0f6fc',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: '600',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <FileText size={14} style={{ color: '#eab308' }} />
+          <FileText size={13} style={{ color: '#eab308' }} />
           <span>Report</span>
         </button>
 
@@ -395,19 +401,20 @@ export function TopBar({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '5px',
+            gap: '4px',
             background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)',
             border: 'none',
             borderRadius: '6px',
-            padding: '5px 12px',
+            padding: '4px 10px',
             color: '#ffffff',
-            fontSize: '0.75rem',
+            fontSize: '0.72rem',
             fontWeight: '700',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            whiteSpace: 'nowrap'
           }}
         >
-          <Play size={13} />
-          <span>Demo Tour (3–5m)</span>
+          <Play size={12} />
+          <span>Demo Tour</span>
         </button>
       </div>
     </header>

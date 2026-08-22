@@ -59,6 +59,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .app-shell { min-height: 100vh; background: var(--bg); }
 .workspace { margin-left: 236px; min-width: 0; }
 .main-content { width: min(1240px, calc(100vw - 236px)); margin: 0 auto; padding: 38px 42px 120px; }
+.main-content.main-content-full { width: calc(100vw - 236px) !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; height: calc(100vh - 64px) !important; overflow: hidden !important; }
 .page-stack { display: flex; flex-direction: column; gap: 22px; animation: enter .3s ease-out; }
 @keyframes enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
