@@ -45,6 +45,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/analysis', require('./routes/analysis'));
 app.use('/api/twinspace', require('./routes/twinspace'));
+app.use('/api/deployment', require('./routes/deployment'));
 
 app.get('/', (req, res) => {
     res.json({ name: 'Project Twin API', status: 'running' });
