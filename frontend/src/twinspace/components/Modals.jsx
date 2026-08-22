@@ -12,7 +12,8 @@ import {
   Bot,
   FileText,
   Download,
-  Github
+  Github,
+  Search
 } from 'lucide-react';
 
 export function CommitModal({ open, onClose, onCommit, currentBranch, currentUser }) {
@@ -548,6 +549,138 @@ export function ConnectDeveloperModal({ open, onClose, onDeveloperConnected }) {
             Connect Developer to TwinSpace
           </button>
         </form>
+      </div>
+    </div>
+  );
+}
+
+export function RepoSearchModal({ open, onClose, files, onOpenFile }) {
+  const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  if (!open) return null;
+
+  const filePaths = Object.keys(files || {});
+  const filteredFiles = filePaths.filter(path => {
+    const matchesQuery = path.toLowerCase().includes(query.toLowerCase().trim());
+    if (selectedCategory === 'all') return matchesQuery;
+    if (selectedCategory === 'backend') return matchesQuery && path.startsWith('backend/');
+    if (selectedCategory === 'frontend') return matchesQuery && path.startsWith('frontend/');
+    if (selectedCategory === 'database') return matchesQuery && (path.startsWith('database/') || path.endsWith('.sql'));
+    return matchesQuery;
+  });
+
+  const handleSelectFile = (path) => {
+    onOpenFile(path);
+    onClose();
+  };
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '100px' }}>
+      <div style={{ background: '#161b22', border: '1px solid #30363d', borderRadius: '12px', width: '640px', maxWidth: '90vw', color: '#c9d1d9', boxShadow: '0 16px 36px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+        {/* Search Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', borderBottom: '1px solid #30363d', background: '#0d1117' }}>
+          <Search size={18} style={{ color: '#58a6ff' }} />
+          <input
+            type="text"
+            placeholder="Direct Search: Type filename or path (e.g. PaymentService, AuthService, schema.sql)..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && filteredFiles.length > 0) {
+                handleSelectFile(filteredFiles[0]);
+              }
+            }}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              color: '#f0f6fc',
+              fontSize: '0.95rem',
+              outline: 'none'
+            }}
+            autoFocus
+          />
+          <span style={{ fontSize: '0.7rem', background: '#21262d', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', color: '#8b949e' }}>
+            Ctrl+K / Esc
+          </span>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}>
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Quick Category Filter Pills */}
+        <div style={{ display: 'flex', gap: '6px', padding: '8px 16px', borderBottom: '1px solid #21262d', background: '#161b22' }}>
+          {['all', 'backend', 'frontend', 'database'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              style={{
+                background: selectedCategory === cat ? '#1f6feb33' : '#0d1117',
+                border: selectedCategory === cat ? '1px solid #1f6febaa' : '1px solid #30363d',
+                borderRadius: '12px',
+                padding: '2px 10px',
+                color: selectedCategory === cat ? '#58a6ff' : '#8b949e',
+                fontSize: '0.72rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                textTransform: 'capitalize'
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+          <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: '#8b949e', alignSelf: 'center' }}>
+            {filteredFiles.length} {filteredFiles.length === 1 ? 'file' : 'files'} found
+          </span>
+        </div>
+
+        {/* Results List */}
+        <div style={{ maxHeight: '360px', overflowY: 'auto', padding: '8px 0' }}>
+          {filteredFiles.length === 0 ? (
+            <div style={{ padding: '32px', textAlign: 'center', color: '#8b949e', fontSize: '0.85rem' }}>
+              No matching files found for &quot;{query}&quot;
+            </div>
+          ) : (
+            filteredFiles.map((path, index) => {
+              const fileName = path.split('/').pop();
+              const lines = (files[path] || '').split('\n').length;
+              return (
+                <div
+                  key={path}
+                  onClick={() => handleSelectFile(path)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '8px 16px',
+                    cursor: 'pointer',
+                    background: index === 0 && query.trim() ? '#1f6feb1a' : 'transparent',
+                    borderLeft: index === 0 && query.trim() ? '3px solid #58a6ff' : '3px solid transparent'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#1f6feb22'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = index === 0 && query.trim() ? '#1f6feb1a' : 'transparent'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FileText size={16} style={{ color: path.endsWith('.ts') || path.endsWith('.tsx') ? '#38bdf8' : path.endsWith('.sql') ? '#eab308' : '#a855f7' }} />
+                    <div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#f0f6fc' }}>{fileName}</div>
+                      <div style={{ fontSize: '0.72rem', color: '#8b949e' }}>{path}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.68rem', background: '#0d1117', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', color: '#8b949e' }}>
+                      {lines} lines
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: '#58a6ff', fontWeight: '600' }}>
+                      Open ↵
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

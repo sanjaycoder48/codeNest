@@ -3,7 +3,7 @@ import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { CenterEditor } from './components/CenterEditor';
 import { RightSidebar } from './components/RightSidebar';
-import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal, ConnectDeveloperModal } from './components/Modals';
+import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal, ConnectDeveloperModal, RepoSearchModal } from './components/Modals';
 import { IntelligenceReport } from './components/IntelligenceReport';
 import { io } from 'socket.io-client';
 import {
@@ -193,6 +193,18 @@ export function Checkout() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [tourModalOpen, setTourModalOpen] = useState(false);
   const [connectDevModalOpen, setConnectDevModalOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleDeveloperConnected = (newDev) => {
     setUsers(prev => {
@@ -393,7 +405,7 @@ export function Checkout() {
             onOpenReport={() => setReportModalOpen(true)}
             onOpenDemoTour={() => setTourModalOpen(true)}
             onOpenConnectDev={() => setConnectDevModalOpen(true)}
-            onSearch={() => alert('Repository Search: Ctrl+K active')}
+            onSearch={() => setSearchModalOpen(true)}
           />
 
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%' }}>
@@ -460,6 +472,7 @@ export function Checkout() {
       <IntelligenceReport open={reportModalOpen} onClose={() => setReportModalOpen(false)} />
       <DemoTourModal open={tourModalOpen} onClose={() => setTourModalOpen(false)} />
       <ConnectDeveloperModal open={connectDevModalOpen} onClose={() => setConnectDevModalOpen(false)} onDeveloperConnected={handleDeveloperConnected} />
+      <RepoSearchModal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} files={files} onOpenFile={handleOpenFile} />
     </div>
   );
 }
