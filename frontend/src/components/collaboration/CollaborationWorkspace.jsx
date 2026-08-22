@@ -278,7 +278,7 @@ export function CollaborationWorkspace({ twin }) {
               <Plus size={14} /> Add Task
             </button>
           </div>
-          <KanbanBoard tasks={tasks} onMoveTask={(id, s) => setTasks(prev => prev.map(t => t.id === id ? { ...t, status: s } : t))} onAddTask={handleAddTask} />
+          <KanbanBoard tasks={tasks} teamMembers={teamMembers} onMoveTask={(id, s) => setTasks(prev => prev.map(t => t.id === id ? { ...t, status: s } : t))} onCreateTask={handleAddTask} />
         </div>
       )}
 

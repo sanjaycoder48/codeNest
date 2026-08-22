@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, User, Calendar, Tag, ArrowRight, MessageSquare, Sparkles, CheckCircle2 } from 'lucide-react';
 
-export function KanbanBoard({ tasks, onMoveTask, onCreateTask, teamMembers }) {
+export function KanbanBoard({ tasks = [], onMoveTask, onCreateTask, onAddTask, teamMembers = [] }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -14,7 +14,7 @@ export function KanbanBoard({ tasks, onMoveTask, onCreateTask, teamMembers }) {
   const handleCreateSubmit = (e) => {
     e.preventDefault();
     if (title.trim()) {
-      onCreateTask({
+      const taskData = {
         id: 'TASK-' + (tasks.length + 45),
         title: title.trim(),
         description: description.trim() || 'No description provided.',
@@ -26,7 +26,10 @@ export function KanbanBoard({ tasks, onMoveTask, onCreateTask, teamMembers }) {
         githubIssue: `#${Math.floor(Math.random() * 50 + 10)}`,
         commentsCount: 0,
         aiContext: `Task created for ${relatedFeature}. Project Twin indexed related files.`
-      });
+      };
+      if (onCreateTask) onCreateTask(taskData);
+      else if (onAddTask) onAddTask(taskData);
+
       setTitle('');
       setDescription('');
       setShowAddModal(false);
