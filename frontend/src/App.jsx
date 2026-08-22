@@ -647,8 +647,9 @@ function Showcase({ twin, requestConfirm, notify, onAsk }) {
 function AskTwin({ twin, open, setOpen }) {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
-    { role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository. Ask about architecture, authentication, routes, dependencies, readiness, or how to develop this project to the next level.`, evidence: [] }
+    { role: "assistant", text: `I’m grounded in ${twin.project.name}’s analyzed repository. Ask about architecture, authentication, routes, dependencies, readiness, or team progress.`, evidence: [] }
   ]);
+
   const answerQuestion = (value) => {
     const lower = value.toLowerCase();
     let response;
@@ -678,9 +679,88 @@ function AskTwin({ twin, open, setOpen }) {
     setMessages((current) => [...current, { role: "user", text: value }, { role: "assistant", ...response }]);
     setQuestion("");
   };
+
   const submit = (event) => { event.preventDefault(); if (question.trim()) answerQuestion(question.trim()); };
-  if (!open) return null;
-  return <div className="ask-panel"><header><div><span className="assistant-mark"><Sparkles size={17} /></span><div><strong>Ask Project Twin</strong><small>Grounded in repository evidence</small></div></div><button className="icon-button" aria-label="Close Project Twin assistant" onClick={() => setOpen(false)}><X size={17} /></button></header><div className="chat-messages">{messages.map((message, index) => <div key={index} className={`message message-${message.role}`}><p style={{ whiteSpace: "pre-wrap" }}>{message.text}</p>{message.evidence?.length > 0 && <div className="message-evidence"><span>Evidence</span>{message.evidence.map((item) => <code key={item}>{item}</code>)}</div>}</div>)}</div><div className="prompt-suggestions">{["Explain the architecture", "How can I develop this project to the next level?", "Where is authentication handled?"].map((item) => <button key={item} onClick={() => answerQuestion(item)}>{item}</button>)}</div><form onSubmit={submit} className="chat-input"><input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about this project..." autoFocus /><button aria-label="Send question"><Send size={16} /></button></form></div>;
+
+  return (
+    <div style={{ position: "fixed", bottom: "20px", right: "20px", zIndex: 1100 }}>
+      {/* Expanded Floating Chatbot Panel */}
+      {open && (
+        <div className="ask-panel" style={{ position: "relative", bottom: "0", right: "0", width: "380px", maxHeight: "520px", boxShadow: "0 16px 40px rgba(0,0,0,0.6)", borderRadius: "12px", border: "1px solid #30363d", background: "#161b22", marginBottom: "12px" }}>
+          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid #30363d", background: "#0d1117" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span className="assistant-mark" style={{ width: "26px", height: "26px", borderRadius: "6px", background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)", display: "grid", placeItems: "center", color: "#fff" }}>
+                <Sparkles size={15} />
+              </span>
+              <div>
+                <strong style={{ fontSize: "0.88rem", color: "#f0f6fc", display: "block" }}>Ask Project Twin</strong>
+                <small style={{ fontSize: "0.68rem", color: "#8b949e" }}>AI grounded in repository evidence</small>
+              </div>
+            </div>
+            <button className="icon-button" aria-label="Close Project Twin assistant" onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", color: "#8b949e", cursor: "pointer" }}>
+              <X size={17} />
+            </button>
+          </header>
+
+          <div className="chat-messages" style={{ padding: "12px", maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+            {messages.map((message, index) => (
+              <div key={index} className={`message message-${message.role}`} style={{ background: message.role === "user" ? "#1f6feb22" : "#0d1117", border: `1px solid ${message.role === "user" ? "#1f6feb66" : "#30363d"}`, borderRadius: "8px", padding: "8px 10px", fontSize: "0.78rem" }}>
+                <p style={{ whiteSpace: "pre-wrap", margin: 0, color: "#f0f6fc" }}>{message.text}</p>
+                {message.evidence?.length > 0 && (
+                  <div className="message-evidence" style={{ marginTop: "6px", fontSize: "0.68rem", color: "#8b949e" }}>
+                    <span>Evidence: </span>
+                    {message.evidence.map((item) => (
+                      <code key={item} style={{ background: "#161b22", padding: "1px 4px", borderRadius: "4px", color: "#58a6ff", marginLeft: "4px" }}>{item}</code>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="prompt-suggestions" style={{ display: "flex", gap: "6px", padding: "6px 12px", overflowX: "auto" }}>
+            {["Explain architecture", "Develop to next level?", "Auth location"].map((item) => (
+              <button key={item} onClick={() => answerQuestion(item)} style={{ background: "#0d1117", border: "1px solid #30363d", color: "#58a6ff", fontSize: '0.68rem', borderRadius: '12px', padding: '2px 8px', whiteSpace: 'nowrap', cursor: 'pointer' }}>
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={submit} className="chat-input" style={{ display: "flex", gap: "6px", padding: "10px 12px", borderTop: "1px solid #30363d" }}>
+            <input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about this project..." style={{ flex: 1, background: "#0d1117", border: "1px solid #30363d", color: "#f0f6fc", padding: "6px 10px", borderRadius: "6px", fontSize: "0.78rem", outline: "none" }} autoFocus />
+            <button aria-label="Send question" style={{ background: "#238636", border: "none", color: "#fff", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", display: "grid", placeItems: "center" }}>
+              <Send size={14} />
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Floating Launcher Button in Bottom Right Corner of Every Page */}
+      <button
+        onClick={() => setOpen(!open)}
+        aria-label="Toggle Project Twin AI Assistant Chatbot"
+        style={{
+          background: "linear-gradient(135deg, #1f6feb 0%, #8957e5 100%)",
+          color: "#ffffff",
+          border: "none",
+          borderRadius: "24px",
+          padding: "10px 18px",
+          fontWeight: "700",
+          fontSize: "0.82rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          cursor: "pointer",
+          boxShadow: "0 6px 20px rgba(137, 87, 229, 0.4)",
+          transition: "transform 0.15s ease"
+        }}
+      >
+        <Sparkles size={16} />
+        <span>Ask Project Twin AI</span>
+        <span style={{ background: "rgba(255,255,255,0.2)", fontSize: "0.65rem", padding: "1px 6px", borderRadius: "10px", fontWeight: "800" }}>AI</span>
+      </button>
+    </div>
+  );
 }
 
 function Toast({ message }) { return message ? <div className="toast"><CheckCircle2 size={17} />{message}</div> : null; }
