@@ -34,12 +34,14 @@ export function RightSidebar({
     }}>
       {/* Sidebar Navigation Tabs Header */}
       <div style={{
+        height: '36px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        background: '#0d1117',
+        background: '#161b22',
         borderBottom: '1px solid #30363d',
-        padding: '6px 0'
+        padding: '0 4px',
+        boxSizing: 'border-box'
       }}>
         <button
           onClick={() => setActiveTab('context')}

@@ -48,7 +48,8 @@ export function CenterEditor({
         borderBottom: '1px solid #30363d',
         display: 'flex',
         alignItems: 'center',
-        overflowX: 'auto'
+        overflowX: 'auto',
+        boxSizing: 'border-box'
       }}>
         {openTabs.map(tab => {
           const isActive = tab === activeTabPath;
@@ -121,11 +122,18 @@ export function CenterEditor({
             options={{
               fontSize: 13,
               fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-              minimap: { enabled: true },
+              minimap: { enabled: false },
               scrollBeyondLastLine: false,
               automaticLayout: true,
               tabSize: 2,
-              lineNumbersMinChars: 3
+              lineNumbersMinChars: 3,
+              overviewRulerBorder: false,
+              overviewRulerLanes: 0,
+              hideCursorInOverviewRuler: true,
+              scrollbar: {
+                verticalScrollbarSize: 8,
+                horizontalScrollbarSize: 8
+              }
             }}
           />
         ) : (
