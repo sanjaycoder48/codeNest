@@ -7,7 +7,7 @@ import { Sparkles, UserPlus, Plus, ArrowRight, Send, MessageSquare, Check, Clock
 
 export function CollaborationWorkspace({ twin }) {
   const API_URL = import.meta.env.VITE_API_URL || "";
-  const [subTab, setSubTab] = useState('Workspace'); // 'Workspace' | 'Tasks' | 'Activity'
+  const [subTab, setSubTab] = useState('Team'); // 'Team' | 'Tasks' | 'Discussion'
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
 
@@ -17,8 +17,8 @@ export function CollaborationWorkspace({ twin }) {
   const [teamMembers] = useState([
     { id: 'usr_1', name: 'Sanjay', role: 'Owner', avatar: 'https://avatars.githubusercontent.com/u/583231?v=4' },
     { id: 'usr_2', name: 'Rahul', role: 'Developer', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
-    { id: 'usr_3', name: 'Priya', role: 'Developer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-    { id: 'usr_4', name: 'Arun', role: 'Designer', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }
+    { id: 'usr_3', name: 'Priya', role: 'Designer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+    { id: 'usr_4', name: 'Arun', role: 'Viewer', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }
   ]);
 
   // Tasks List
@@ -38,14 +38,6 @@ export function CollaborationWorkspace({ twin }) {
 
   // Chat Input
   const [chatMessage, setChatMessage] = useState('');
-
-  // Recent Activity Items
-  const [activities] = useState([
-    { id: 'a1', icon: '✓', color: '#3fb950', text: 'Rahul completed Authentication', time: '10m ago' },
-    { id: 'a2', icon: '↗️', color: '#58a6ff', text: 'Priya updated Payment API', time: '25m ago' },
-    { id: 'a3', icon: '💬', color: '#a855f7', text: 'Arun commented on Mobile UI', time: '1h ago' },
-    { id: 'a4', icon: '🚀', color: '#eab308', text: 'Preview deployment completed successfully', time: '2h ago' }
-  ]);
 
   const handleAddTask = async (newTask) => {
     setTasks(prev => [...prev, newTask]);
@@ -126,11 +118,7 @@ export function CollaborationWorkspace({ twin }) {
     }
   };
 
-  const getStatusIcon = (status) => {
-    if (status === 'Done' || status === 'Completed') return <span style={{ color: '#3fb950', fontWeight: '800' }}>✓</span>;
-    if (status === 'In Progress') return <span style={{ color: '#eab308', fontWeight: '800' }}>◐</span>;
-    return <span style={{ color: '#8b949e', fontWeight: '800' }}>○</span>;
-  };
+
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '16px 0', color: '#c9d1d9', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -165,7 +153,7 @@ export function CollaborationWorkspace({ twin }) {
           </p>
         </div>
 
-        {/* Right Action: ONE Prominent + Invite People Button */}
+        {/* Right Action: ONE Prominent + Add Member Button */}
         <button
           onClick={() => setShowInviteModal(true)}
           style={{
@@ -184,13 +172,13 @@ export function CollaborationWorkspace({ twin }) {
           }}
         >
           <UserPlus size={16} />
-          <span>+ Invite People</span>
+          <span>+ Add Member</span>
         </button>
       </div>
 
-      {/* 2. Sub-Navigation Tabs (Workspace | Tasks | Activity) */}
+      {/* 2. Sub-Navigation Tabs ([ Team ] [ Tasks ] [ Discussion ]) */}
       <div style={{ display: 'flex', gap: '6px', borderBottom: '1px solid #21262d', paddingBottom: '2px' }}>
-        {['Workspace', 'Tasks', 'Activity'].map((tab) => (
+        {['Team', 'Tasks', 'Discussion'].map((tab) => (
           <button
             key={tab}
             onClick={() => setSubTab(tab)}
@@ -205,326 +193,157 @@ export function CollaborationWorkspace({ twin }) {
               cursor: 'pointer'
             }}
           >
-            {tab === 'Tasks' ? 'Tasks (Board)' : tab}
+            {tab}
           </button>
         ))}
       </div>
 
-      {/* RENDER FULL BOARD IF 'Tasks' SELECTED */}
+      {/* 1. RENDER TEAM TAB (DEFAULT) */}
+      {subTab === 'Team' && (
+        <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>Project Team</h3>
+              <span style={{ fontSize: '0.78rem', color: '#8b949e' }}>Collaborators on <strong>{projectName}</strong></span>
+            </div>
+            <button
+              onClick={() => setShowInviteModal(true)}
+              style={{
+                background: '#238636',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '0.8rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              <UserPlus size={15} />
+              <span>+ Add Member</span>
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {teamMembers.map((member) => (
+              <div key={member.id} style={{ background: '#0d1117', border: '1px solid #21262d', borderRadius: '8px', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <img src={member.avatar} alt={member.name} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+                  <div>
+                    <strong style={{ fontSize: '0.9rem', color: '#f0f6fc', display: 'block' }}>{member.name}</strong>
+                    <span style={{ fontSize: '0.75rem', color: '#8b949e' }}>Member of {projectName}</span>
+                  </div>
+                </div>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: '700',
+                  padding: '3px 10px',
+                  borderRadius: '12px',
+                  background: member.role === 'Owner' ? '#23863633' : member.role === 'Developer' ? '#1f6feb33' : member.role === 'Designer' ? '#a855f733' : '#30363d',
+                  color: member.role === 'Owner' ? '#3fb950' : member.role === 'Developer' ? '#58a6ff' : member.role === 'Designer' ? '#c084fc' : '#8b949e',
+                  border: `1px solid ${member.role === 'Owner' ? '#23863666' : member.role === 'Developer' ? '#1f6feb66' : member.role === 'Designer' ? '#a855f766' : '#484f58'}`
+                }}>
+                  {member.role}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 2. RENDER TASKS TAB */}
       {subTab === 'Tasks' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Full Project Kanban Board</span>
-            <button onClick={() => setSubTab('Workspace')} style={{ background: 'transparent', border: 'none', color: '#58a6ff', fontSize: '0.78rem', cursor: 'pointer' }}>
-              ← Back to Workspace
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.82rem', color: '#8b949e' }}>Tasks for <strong>{projectName}</strong> ({tasks.length} active)</span>
+            <button
+              onClick={() => setShowAddTaskModal(true)}
+              style={{
+                background: '#238636',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '0.78rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <Plus size={14} /> Add Task
             </button>
           </div>
           <KanbanBoard tasks={tasks} onMoveTask={(id, s) => setTasks(prev => prev.map(t => t.id === id ? { ...t, status: s } : t))} onAddTask={handleAddTask} />
         </div>
       )}
 
-      {/* RENDER FULL ACTIVITY IF 'Activity' SELECTED */}
-      {subTab === 'Activity' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Complete Project Event Activity</span>
-            <button onClick={() => setSubTab('Workspace')} style={{ background: 'transparent', border: 'none', color: '#58a6ff', fontSize: '0.78rem', cursor: 'pointer' }}>
-              ← Back to Workspace
-            </button>
+      {/* 3. RENDER DISCUSSION TAB */}
+      {subTab === 'Discussion' && (
+        <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '10px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>Project Discussion</h3>
+            <span style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: '600' }}>@ProjectTwin enabled</span>
           </div>
-          <ActivityTimeline events={[
-            { id: 'e1', type: 'commit', actor: 'Rahul', description: 'Completed Authentication module', time: '10m ago' },
-            { id: 'e2', type: 'pr', actor: 'Priya', description: 'Updated Payment API endpoints in backend/routes', time: '25m ago' },
-            { id: 'e3', type: 'comment', actor: 'Arun', description: 'Commented on Mobile UI responsiveness', time: '1h ago' },
-            { id: 'e4', type: 'deploy', actor: 'Project Twin', description: 'Preview deployment completed on commit 25da750', time: '2h ago' }
-          ]} />
-        </div>
-      )}
 
-      {/* MAIN WORKSPACE VIEW (DEFAULT) */}
-      {subTab === 'Workspace' && (
-        <>
-          {/* 3. Project Twin AI Brief Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)',
-            border: '1px solid rgba(168, 85, 247, 0.25)',
-            borderRadius: '10px',
-            padding: '16px 20px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Sparkles size={16} style={{ color: '#a855f7' }} />
-              <strong style={{ fontSize: '0.9rem', color: '#f0f6fc' }}>✦ Project Twin Brief</strong>
-            </div>
-
-            <p style={{ fontSize: '0.85rem', color: '#e6edf3', margin: 0, lineHeight: '1.5' }}>
-              «Since your last visit, Rahul completed authentication, Priya updated the payment API, deployment is healthy, and 2 tasks still need attention.»
-            </p>
-
-            <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-              <button
-                onClick={() => {
-                  const askInput = document.getElementById('chat-input-box');
-                  if (askInput) {
-                    askInput.focus();
-                    setChatMessage('@ProjectTwin ');
-                  }
-                }}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
+            {discussions.map((m) => (
+              <div
+                key={m.id}
                 style={{
-                  background: '#161b22',
-                  border: '1px solid #30363d',
-                  color: '#58a6ff',
-                  borderRadius: '6px',
-                  padding: '5px 12px',
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
+                  background: m.isAI ? 'rgba(168, 85, 247, 0.08)' : '#0d1117',
+                  border: `1px solid ${m.isAI ? 'rgba(168, 85, 247, 0.25)' : '#21262d'}`,
+                  borderRadius: '8px',
+                  padding: '10px 14px',
                   display: 'flex',
-                  alignItems: 'center',
+                  flexDirection: 'column',
                   gap: '4px'
                 }}
               >
-                <Sparkles size={13} /> Ask Project Twin
-              </button>
-            </div>
-          </div>
-
-          {/* 4. Desktop Two-Column Layout (Stacked on Mobile) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', alignItems: 'start' }}>
-            
-            {/* 5. LEFT COLUMN: Your Team's Work */}
-            <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '10px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>{"Your Team's Work"}</h3>
-                <span style={{ fontSize: '0.7rem', color: '#8b949e' }}>{tasks.length} Active Tasks</span>
-              </div>
-
-              {/* Simple Task List */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    style={{
-                      background: '#0d1117',
-                      border: '1px solid #21262d',
-                      borderRadius: '8px',
-                      padding: '10px 12px',
-                      display: 'flex',
-                      justify: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ fontSize: '0.9rem' }}>{getStatusIcon(task.status)}</div>
-                      <div>
-                        <strong style={{ fontSize: '0.85rem', color: '#f0f6fc', display: 'block' }}>{task.title}</strong>
-                        <span style={{ fontSize: '0.72rem', color: '#8b949e' }}>{task.assignee} · {task.status}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {m.isAI ? (
+                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#a855f7', display: 'grid', placeItems: 'center', color: '#fff' }}>
+                        <Sparkles size={11} />
                       </div>
-                    </div>
-
-                    <select
-                      value={task.status}
-                      onChange={(e) => {
-                        const newStatus = e.target.value;
-                        setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
-                      }}
-                      style={{ background: '#161b22', border: '1px solid #30363d', color: '#c9d1d9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}
-                    >
-                      <option value="To Do">To Do</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Done">Done</option>
-                    </select>
+                    ) : (
+                      <img src={m.avatar} alt={m.user} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
+                    )}
+                    <strong style={{ fontSize: '0.8rem', color: m.isAI ? '#c084fc' : '#f0f6fc' }}>
+                      {m.user} {m.isAI && '✦'}
+                    </strong>
                   </div>
-                ))}
-              </div>
-
-              {/* Action Buttons: + Add Task & View Board → */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #21262d', paddingTop: '12px', marginTop: '4px' }}>
-                <button
-                  onClick={() => setShowAddTaskModal(true)}
-                  style={{
-                    background: '#238636',
-                    border: 'none',
-                    color: '#ffffff',
-                    borderRadius: '6px',
-                    padding: '6px 12px',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <Plus size={14} /> Add Task
-                </button>
-
-                <button
-                  onClick={() => setSubTab('Tasks')}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#58a6ff',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <span>View Board</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            </div>
-
-            {/* 7 & 8. RIGHT COLUMN: Team Discussion (Group Chat + AI) */}
-            <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '10px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>Team Discussion</h3>
-                <span style={{ fontSize: '0.7rem', color: '#a855f7', fontWeight: '600' }}>@ProjectTwin enabled</span>
-              </div>
-
-              {/* Chat Thread */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
-                {discussions.map((m) => (
-                  <div
-                    key={m.id}
-                    style={{
-                      background: m.isAI ? 'rgba(168, 85, 247, 0.08)' : '#0d1117',
-                      border: `1px solid ${m.isAI ? 'rgba(168, 85, 247, 0.25)' : '#21262d'}`,
-                      borderRadius: '8px',
-                      padding: '10px 12px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {m.isAI ? (
-                          <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: '#a855f7', display: 'grid', placeItems: 'center', color: '#fff' }}>
-                            <Sparkles size={11} />
-                          </div>
-                        ) : (
-                          <img src={m.avatar} alt={m.user} style={{ width: '20px', height: '20px', borderRadius: '50%' }} />
-                        )}
-                        <strong style={{ fontSize: '0.8rem', color: m.isAI ? '#c084fc' : '#f0f6fc' }}>
-                          {m.user} {m.isAI && '✦'}
-                        </strong>
-                      </div>
-                      <span style={{ fontSize: '0.68rem', color: '#8b949e' }}>{m.time}</span>
-                    </div>
-
-                    <p style={{ fontSize: '0.82rem', color: '#c9d1d9', margin: 0, lineHeight: '1.4' }}>
-                      {m.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Quick AI Prompts Bar */}
-              <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '2px' }}>
-                {[
-                  "@ProjectTwin summarize today's work",
-                  "@ProjectTwin what's blocking deployment?",
-                  "@ProjectTwin what should we finish before launch?"
-                ].map((prompt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setChatMessage(prompt);
-                      const input = document.getElementById('chat-input-box');
-                      if (input) input.focus();
-                    }}
-                    style={{
-                      background: '#0d1117',
-                      border: '1px solid #30363d',
-                      color: '#a855f7',
-                      fontSize: '0.65rem',
-                      borderRadius: '10px',
-                      padding: '2px 8px',
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              {/* Chat Input Form */}
-              <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '6px', borderTop: '1px solid #21262d', paddingTop: '10px' }}>
-                <input
-                  id="chat-input-box"
-                  type="text"
-                  placeholder="Message your team (@ProjectTwin to ask AI)..."
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  style={{ flex: 1, background: '#0d1117', border: '1px solid #30363d', color: '#f0f6fc', padding: '7px 10px', borderRadius: '6px', fontSize: '0.78rem', outline: 'none' }}
-                />
-                <button
-                  type="submit"
-                  style={{ background: '#1f6feb', border: 'none', color: '#fff', padding: '7px 12px', borderRadius: '6px', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
-                >
-                  <Send size={14} />
-                </button>
-              </form>
-            </div>
-
-          </div>
-
-          {/* 9. Recent Activity Section */}
-          <div style={{ background: '#161b22', border: '1px solid #21262d', borderRadius: '10px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>Recent Activity</h3>
-              <button
-                onClick={() => setSubTab('Activity')}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#58a6ff',
-                  fontSize: '0.78rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-                <span>View all activity</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {activities.map((act) => (
-                <div
-                  key={act.id}
-                  style={{
-                    background: '#0d1117',
-                    border: '1px solid #21262d',
-                    borderRadius: '6px',
-                    padding: '8px 12px',
-                    display: 'flex',
-                    justify: 'space-between',
-                    alignItems: 'center',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{act.icon}</span>
-                    <span style={{ color: '#f0f6fc' }}>{act.text}</span>
-                  </div>
-                  <span style={{ fontSize: '0.7rem', color: '#8b949e' }}>{act.time}</span>
+                  <span style={{ fontSize: '0.68rem', color: '#8b949e' }}>{m.time}</span>
                 </div>
-              ))}
-            </div>
+
+                <p style={{ fontSize: '0.82rem', color: '#c9d1d9', margin: 0, lineHeight: '1.4' }}>
+                  {m.text}
+                </p>
+              </div>
+            ))}
           </div>
-        </>
+
+          <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '8px', borderTop: '1px solid #21262d', paddingTop: '12px' }}>
+            <input
+              id="chat-input-box"
+              type="text"
+              placeholder="Message your team (@ProjectTwin to ask AI)..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              style={{ flex: 1, background: '#0d1117', border: '1px solid #30363d', color: '#f0f6fc', padding: '8px 12px', borderRadius: '6px', fontSize: '0.8rem', outline: 'none' }}
+            />
+            <button
+              type="submit"
+              style={{ background: '#1f6feb', border: 'none', color: '#fff', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+            >
+              <Send size={15} />
+            </button>
+          </form>
+        </div>
       )}
 
       {/* Invite People Modal */}

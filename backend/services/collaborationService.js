@@ -51,7 +51,7 @@ function createInvite({ projectId, inviter, email, role = 'Developer', expiresIn
   const expiresAt = new Date(Date.now() + expiresInHours * 3600 * 1000).toISOString();
 
   const newInvite = {
-    id: 'inv_id_' + Date.now().toString(36),
+    id: 'inv_id_' + crypto.randomBytes(4).toString('hex'),
     token,
     projectId,
     email: email ? String(email).toLowerCase() : null,
