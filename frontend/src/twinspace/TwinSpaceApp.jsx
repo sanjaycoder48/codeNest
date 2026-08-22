@@ -379,7 +379,7 @@ export function Checkout() {
             onSearch={() => alert('Repository Search: Ctrl+K active')}
           />
 
-          <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%' }}>
             <LeftSidebar
               files={files}
               activeFile={activeTabPath}

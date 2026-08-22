@@ -56,7 +56,7 @@ export function TopBar({
       flexShrink: 0
     }}>
       {/* Left section: Branding, Repo & Branch */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', color: '#f0f6fc', flexShrink: 0 }}>
           <div style={{
             width: '26px',
