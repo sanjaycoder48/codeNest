@@ -15,7 +15,30 @@ const PORT = process.env.PORT || 5000;
 // Listen first: repository analysis does not need a database, so the API stays
 // useful even when MongoDB is unreachable. Only the account and saved-project
 // features depend on the connection below.
+const { Server } = require('socket.io');
 const server = app.listen(PORT, () => console.log(`Project Twin API running on port ${PORT}`));
+
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST']
+    }
+});
+
+io.on('connection', (socket) => {
+    socket.on('join-room', (data) => {
+        socket.join('twinspace');
+        io.to('twinspace').emit('presence-update', { event: 'join', user: data?.user });
+    });
+
+    socket.on('active-file', (data) => {
+        io.to('twinspace').emit('file-presence', data);
+    });
+
+    socket.on('code-change', (data) => {
+        socket.broadcast.to('twinspace').emit('code-sync', data);
+    });
+});
 
 mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/codenest', {
     serverSelectionTimeoutMS: 3000

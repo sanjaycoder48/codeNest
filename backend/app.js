@@ -44,6 +44,7 @@ if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/analysis', require('./routes/analysis'));
+app.use('/api/twinspace', require('./routes/twinspace'));
 
 app.get('/', (req, res) => {
     res.json({ name: 'Project Twin API', status: 'running' });
