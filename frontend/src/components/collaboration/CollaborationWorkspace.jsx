@@ -14,12 +14,25 @@ export function CollaborationWorkspace({ twin }) {
   const projectName = twin?.project?.name || 'CampusCare';
 
   // Team Members
-  const [teamMembers] = useState([
+  const [teamMembers, setTeamMembers] = useState([
     { id: 'usr_1', name: 'Sanjay', role: 'Owner', avatar: 'https://avatars.githubusercontent.com/u/583231?v=4' },
     { id: 'usr_2', name: 'Rahul', role: 'Developer', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
     { id: 'usr_3', name: 'Priya', role: 'Designer', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
     { id: 'usr_4', name: 'Arun', role: 'Viewer', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' }
   ]);
+
+  const handleInviteMember = async (newMember, email) => {
+    setTeamMembers(prev => [...prev, newMember]);
+    try {
+      await fetch(`${API_URL}/api/collaboration/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projectName, inviter: "Sanjay", email, role: newMember.role })
+      });
+    } catch {
+      // Offline fallback
+    }
+  };
 
   // Tasks List
   const [tasks, setTasks] = useState([
@@ -351,6 +364,7 @@ export function CollaborationWorkspace({ twin }) {
         open={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         repoName={projectName}
+        onInviteMember={handleInviteMember}
       />
 
       {/* Add Task Modal */}

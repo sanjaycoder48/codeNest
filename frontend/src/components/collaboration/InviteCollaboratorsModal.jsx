@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserPlus, Copy, Check, X, Link, Mail, ChevronDown, ChevronUp, RefreshCw, Shield } from 'lucide-react';
 
-export function InviteCollaboratorsModal({ open, onClose, repoName = 'CampusCare' }) {
+export function InviteCollaboratorsModal({ open, onClose, repoName = 'CampusCare', onInviteMember }) {
   const [activeTab, setActiveTab] = useState('email'); // 'email' | 'link'
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('Developer');
@@ -30,9 +30,22 @@ export function InviteCollaboratorsModal({ open, onClose, repoName = 'CampusCare
   const handleSendEmailInvite = (e) => {
     e.preventDefault();
     if (email.trim()) {
-      setStatusMsg(`Invitation sent to ${email.trim()} as ${role}!`);
+      const emailVal = email.trim();
+      const namePart = emailVal.split('@')[0];
+      const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+      const newMember = {
+        id: 'usr_' + Date.now(),
+        name: displayName,
+        role: role || 'Developer',
+        avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150`
+      };
+      if (onInviteMember) onInviteMember(newMember, emailVal);
+      setStatusMsg(`Added ${displayName} (${emailVal}) as ${role} to ${repoName}!`);
       setEmail('');
-      setTimeout(() => setStatusMsg(''), 4000);
+      setTimeout(() => {
+        setStatusMsg('');
+        if (onClose) onClose();
+      }, 1200);
     }
   };
 
