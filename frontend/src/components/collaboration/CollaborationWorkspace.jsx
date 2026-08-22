@@ -6,6 +6,7 @@ import { ActivityTimeline } from './ActivityTimeline';
 import { Sparkles, UserPlus, Plus, ArrowRight, Send, MessageSquare, Check, Clock, AtSign, Paperclip, ChevronRight, CheckCircle2 } from 'lucide-react';
 
 export function CollaborationWorkspace({ twin }) {
+  const API_URL = import.meta.env.VITE_API_URL || "";
   const [subTab, setSubTab] = useState('Workspace'); // 'Workspace' | 'Tasks' | 'Activity'
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -46,11 +47,20 @@ export function CollaborationWorkspace({ twin }) {
     { id: 'a4', icon: '🚀', color: '#eab308', text: 'Preview deployment completed successfully', time: '2h ago' }
   ]);
 
-  const handleAddTask = (newTask) => {
+  const handleAddTask = async (newTask) => {
     setTasks(prev => [...prev, newTask]);
+    try {
+      await fetch(`${API_URL}/api/collaboration/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projectName, title: newTask.title, assignedTo: newTask.assignee, priority: newTask.priority })
+      });
+    } catch {
+      // Offline fallback
+    }
   };
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
 
@@ -67,7 +77,31 @@ export function CollaborationWorkspace({ twin }) {
     setDiscussions(prev => [...prev, newMsg]);
     setChatMessage('');
 
-    // AI bot participation if mentioned
+    try {
+      const res = await fetch(`${API_URL}/api/collaboration/discussions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: projectName, text: userText, author: "Sanjay", repositoryTwin: twin })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.aiMsg) {
+          setDiscussions(prev => [...prev, {
+            id: data.aiMsg.id,
+            user: 'Project Twin',
+            avatar: null,
+            text: data.aiMsg.text,
+            time: 'Just now',
+            isAI: true
+          }]);
+          return;
+        }
+      }
+    } catch {
+      // Fallback AI responder below
+    }
+
+    // AI bot participation fallback if mentioned
     if (userText.toLowerCase().includes('@projecttwin') || userText.toLowerCase().includes('project twin') || userText.toLowerCase().includes('ai')) {
       setTimeout(() => {
         let aiReply = "Project Twin here! Based on repo analysis, 2 tasks are currently in progress and deployment pipelines are passing cleanly.";
