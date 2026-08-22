@@ -176,16 +176,54 @@ function architectureFor(frameworks) {
 }
 
 export async function analyzePublicRepository(input, onProgress = () => {}) {
+  const API_URL = import.meta.env.VITE_API_URL || "";
+  
+  // Single Source of Truth: Attempt backend API analysis first
+  try {
+    onProgress(15, "Connecting to backend analysis engine...");
+    const response = await fetch(`${API_URL}/api/analysis`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repository: input }),
+    });
+
+    if (response.ok) {
+      const initialJob = await response.json();
+      let currentJob = initialJob;
+
+      // Poll backend job until complete or failed
+      while (currentJob.status === "queued" || currentJob.status === "analyzing") {
+        onProgress(currentJob.progress || 40, currentJob.stage || "Analyzing repository");
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        
+        const pollRes = await fetch(`${API_URL}/api/analysis/${currentJob.id}`);
+        if (pollRes.ok) {
+          currentJob = await pollRes.json();
+        } else {
+          break;
+        }
+      }
+
+      if (currentJob.status === "complete" && currentJob.twin) {
+        onProgress(100, "Project Twin ready");
+        return currentJob.twin;
+      }
+    }
+  } catch {
+    // Graceful fallback to client analyzer if backend server is offline or unreachable
+  }
+
+  // Standalone offline analyzer fallback
   const { owner, repo } = parseRepository(input);
-  onProgress(12, "Reading repository metadata");
+  onProgress(20, "Reading repository metadata");
   const metadata = await githubRequest(`https://api.github.com/repos/${owner}/${repo}`);
-  onProgress(30, "Classifying repository files");
+  onProgress(40, "Classifying repository files");
   const tree = await githubRequest(`https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(metadata.default_branch)}?recursive=1`);
   if (tree.truncated) throw new Error("This repository is too large for browser analysis.");
 
   const classified = classifyFiles(tree.tree || []);
   const evidenceFiles = selectEvidenceFiles(classified.files);
-  onProgress(56, "Extracting high-signal evidence");
+  onProgress(65, "Extracting high-signal evidence");
   const evidence = await fetchEvidence(owner, repo, evidenceFiles);
   const { manifests, dependencies } = packageData(evidence);
   const frameworks = [...new Set(dependencies.map((name) => FRAMEWORK_SIGNALS[name]).filter(Boolean))];
@@ -197,7 +235,7 @@ export async function analyzePublicRepository(input, onProgress = () => {}) {
   const environment = extractEnvironment(evidence);
   const apiRoutes = extractRoutes(evidence, classified.apiFiles);
   const readiness = readinessFor({ files: classified.files, manifests, environments: environment, frameworks });
-  onProgress(88, "Building Project Twin context");
+  onProgress(90, "Building Project Twin context");
 
   return {
     id: `${owner}-${repo}`.toLowerCase(),
