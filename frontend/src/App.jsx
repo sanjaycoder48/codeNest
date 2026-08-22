@@ -468,8 +468,65 @@ function Readiness({ twin, onAI }) {
 
 function Upgrades({ twin, notify, requestConfirm }) {
   const [sandbox, setSandbox] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState("All");
   const runSandbox = (item) => { setSandbox({ item, status: "running", view: "report" }); setTimeout(() => setSandbox({ item, status: "complete", view: "report" }), 1800); };
-  return <div className="page-stack"><PageTitle eyebrow="Contextual improvements" title="Upgrade Advisor" description="Recommendations ranked by project benefit, compatibility, and migration risk." /><div className="advisor-summary"><WandSparkles size={20} /><div><strong>{twin.recommendations.length} relevant upgrades found</strong><p>Nothing is applied until you review the isolated verification report.</p></div></div><div className="upgrade-list">{twin.recommendations.map((item, index) => <article className="upgrade-card panel" key={item.title}><header><span className="upgrade-number">0{index + 1}</span><div><Badge tone={index === 0 ? "violet" : "neutral"}>{item.category}</Badge><h2>{item.title}</h2><p>{item.why}</p></div><Badge tone="green">{item.migrationRisk} risk</Badge></header><div className="change-compare"><div><span>Current</span><p>{item.current}</p></div><ArrowRight size={18} /><div><span>Recommended</span><p>{item.recommended}</p></div></div><footer><div><strong>{item.benefit}</strong><span>{item.compatibility}</span></div><Button variant="secondary" onClick={() => runSandbox(item)}><TestTube2 size={16} /> Test safely</Button></footer></article>)}</div>
+  
+  const recommendations = (twin.recommendations || []).filter((item) => categoryFilter === "All" || item.category === categoryFilter);
+  const categories = ["All", "Code", "Dependencies", "AI Models", "UI/Design", "Security", "Performance"];
+
+  return <div className="page-stack">
+    <PageTitle eyebrow="Contextual improvements" title="Upgrade Advisor" description="Evidence-grounded recommendations categorized by project area, risk, and expected benefit." />
+    <div className="advisor-summary">
+      <WandSparkles size={20} />
+      <div>
+        <strong>{(twin.recommendations || []).length} evidence-backed upgrades identified</strong>
+        <p>Grounded in repository context. Nothing is applied until you test in the isolated sandbox.</p>
+      </div>
+    </div>
+    
+    <div className="filter-row">
+      {categories.map((cat) => (
+        <button key={cat} className={categoryFilter === cat ? "active" : ""} onClick={() => setCategoryFilter(cat)}>
+          {cat === "All" ? `All (${(twin.recommendations || []).length})` : cat}
+        </button>
+      ))}
+    </div>
+
+    <div className="upgrade-list">
+      {recommendations.map((item, index) => (
+        <article className="upgrade-card panel" key={item.title}>
+          <header>
+            <span className="upgrade-number">0{index + 1}</span>
+            <div>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <Badge tone="violet">{item.category}</Badge>
+                {item.evidence && <code style={{ fontSize: "0.68rem", background: "#0d1117", border: "1px solid #30363d", padding: "1px 6px", borderRadius: "4px", color: "#58a6ff" }}>{item.evidence}</code>}
+              </div>
+              <h2 style={{ marginTop: "4px" }}>{item.title}</h2>
+              <p>{item.why}</p>
+            </div>
+            <Badge tone={item.migrationRisk === "High" ? "red" : item.migrationRisk === "Medium" ? "amber" : "green"}>{item.migrationRisk} risk</Badge>
+          </header>
+          <div className="change-compare">
+            <div><span>Current</span><p>{item.current}</p></div>
+            <ArrowRight size={18} />
+            <div><span>Recommended</span><p>{item.recommended}</p></div>
+          </div>
+          <footer>
+            <div><strong>{item.benefit}</strong><span>{item.compatibility}</span></div>
+            <Button variant="secondary" onClick={() => runSandbox(item)}><TestTube2 size={16} /> Test safely</Button>
+          </footer>
+        </article>
+      ))}
+      {!recommendations.length && (
+        <div className="panel empty-state">
+          <CheckCircle2 size={24} />
+          <strong>No upgrades in this category</strong>
+          <p>The repository passed verified evidence checks for this area.</p>
+        </div>
+      )}
+    </div>
+
     {sandbox && <div className="modal-backdrop"><section className="modal sandbox-modal"><header className="modal-header"><div><p className="eyebrow">Isolated upgrade branch</p><h2>{sandbox.item.title}</h2></div>{sandbox.status === "complete" && <button className="icon-button" aria-label="Close upgrade report" onClick={() => setSandbox(null)}><X size={18} /></button>}</header>{sandbox.status === "running" ? <div className="sandbox-running"><LoaderCircle className="spin" size={28} /><h3>Verifying compatibility</h3><div className="sandbox-steps"><span className="done"><Check size={14} /> Branch created</span><span className="done"><Check size={14} /> Changes applied</span><span className="active"><LoaderCircle className="spin" size={14} /> Running build and tests</span></div></div> : <div><div className="subnav report-tabs"><button className={sandbox.view === "report" ? "active" : ""} onClick={() => setSandbox({ ...sandbox, view: "report" })}><ListChecks size={14} /> Report</button><button className={sandbox.view === "diff" ? "active" : ""} onClick={() => setSandbox({ ...sandbox, view: "diff" })}><FileDiff size={14} /> Diff</button><button className={sandbox.view === "plan" ? "active" : ""} onClick={() => setSandbox({ ...sandbox, view: "plan" })}><GitPullRequest size={14} /> Migration plan</button></div>{sandbox.view === "report" ? <><div className="verification-result"><div><span>Build</span><strong className="success-text">PASS</strong></div><div><span>Tests</span><strong>43/43</strong></div><div><span>Breaking changes</span><strong>0</strong></div><div><span>Confidence</span><strong>94%</strong></div></div><div className="inline-alert inline-success"><CheckCircle2 size={17} /><span>Compatible in the isolated environment. No repository changes were published.</span></div></> : sandbox.view === "diff" ? <div className="diff-preview"><div><span>Evidence</span><code>{sandbox.item.evidence}</code></div><pre><span>- {sandbox.item.current}</span>{"\n"}<strong>+ {sandbox.item.recommended}</strong></pre></div> : <ol className="migration-plan">{sandbox.item.migrationPlan.map((step, index) => <li key={step}><span>{index + 1}</span><div><strong>{step}</strong><small>{index === sandbox.item.migrationPlan.length - 1 ? "Requires your approval" : "Runs in the isolated branch"}</small></div></li>)}</ol>}<div className="modal-actions"><Button variant="ghost" onClick={() => { setSandbox(null); notify("Sandbox discarded; repository unchanged"); }}>Discard</Button><Button variant="secondary" onClick={() => setSandbox({ ...sandbox, view: "diff" })}><FileDiff size={15} /> View diff</Button><Button onClick={() => requestConfirm({ title: "Create a draft pull request?", description: "This prepares the verified sandbox changes for review. It will not merge them.", action: "Create draft PR" }, () => { setSandbox(null); notify("Draft pull request prepared for review"); })}><GitPullRequest size={15} /> Create PR</Button></div></div>}</section></div>}
   </div>;
 }

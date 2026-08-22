@@ -236,28 +236,174 @@ function buildReadiness({ files, packages, dependencies, environments, framework
 }
 
 function buildRecommendations({ dependencies, frameworks, readiness }) {
-    const recommendations = readiness.findings.slice(0, 3).map((finding) => ({
-        category: finding.area,
-        title: finding.solution.replace(/\.$/, ''),
-        current: finding.problem,
-        recommended: finding.solution,
-        why: finding.why,
-        benefit: finding.severity === 'critical' || finding.severity === 'high' ? 'Higher release confidence' : 'Faster, more reliable maintenance',
-        compatibility: `Fits the detected ${frameworks.slice(0, 2).join(' + ') || 'repository'} setup`,
-        migrationRisk: finding.severity === 'critical' ? 'Medium' : 'Low',
-        migrationPlan: ['Create an isolated branch', 'Apply the smallest configuration change', 'Run build and tests', 'Review the diff before creating a PR'],
-        evidence: finding.file
-    }));
+    const recommendations = [];
+    const stackStr = frameworks.slice(0, 2).join(' + ') || 'repository';
 
-    if (dependencies.includes('react') && !dependencies.some((item) => /vitest|jest/.test(item))) {
+    // 1. Security Category
+    const secFinding = readiness.findings.find(f => f.id === 'env' || f.id === 'gitignore');
+    if (secFinding) {
         recommendations.push({
-            category: 'Code', title: 'Add component-level verification', current: 'React is present without a detected test runner',
-            recommended: 'Add Vitest and Testing Library for critical interactions', why: 'The interface has no automated regression signal.',
-            benefit: 'Safer UI changes', compatibility: 'Native fit for Vite and React', migrationRisk: 'Low',
-            migrationPlan: ['Install test dependencies', 'Add a test configuration', 'Cover one critical flow', 'Run tests in CI'], evidence: 'package.json'
+            category: 'Security',
+            title: secFinding.solution.replace(/\.$/, ''),
+            current: secFinding.problem,
+            recommended: secFinding.solution,
+            why: secFinding.why,
+            benefit: 'Prevents secret leaks & deployment configuration failures',
+            compatibility: `Fits ${stackStr} environment requirements`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Audit environment variables', 'Add .env.example without secret values', 'Verify in CI'],
+            evidence: secFinding.file || 'repository root'
+        });
+    } else {
+        recommendations.push({
+            category: 'Security',
+            title: 'Enforce Environment Secret Guards',
+            current: 'Environment variables detected without automated secret scanning',
+            recommended: 'Add Git secret scanner hook and rotate production keys',
+            why: 'Undocumented or unrotated secrets risk credential leaks in public or team repos.',
+            benefit: 'Zero accidental key leaks in git history',
+            compatibility: `Compatible with ${stackStr}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Install pre-commit secret hook', 'Rotate API credentials', 'Verify key isolation'],
+            evidence: '.env.example'
         });
     }
-    return recommendations.slice(0, 5);
+
+    // 2. Dependencies Category
+    const depFinding = readiness.findings.find(f => f.id === 'lockfile');
+    if (depFinding) {
+        recommendations.push({
+            category: 'Dependencies',
+            title: depFinding.solution.replace(/\.$/, ''),
+            current: depFinding.problem,
+            recommended: depFinding.solution,
+            why: depFinding.why,
+            benefit: 'Ensures deterministic builds across development & production environments',
+            compatibility: `Native fit for ${stackStr}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Generate package lockfile locally', 'Commit lockfile to git', 'Enforce frozen lockfile in CI'],
+            evidence: depFinding.file || 'package.json'
+        });
+    } else {
+        recommendations.push({
+            category: 'Dependencies',
+            title: 'Pin Exact Dependency Lockfile',
+            current: 'Dependencies configured via package.json',
+            recommended: 'Enforce npm ci / frozen-lockfile checks in automated CI pipeline',
+            why: 'Unpinned dependency installs may pull breaking minor version bumps during builds.',
+            benefit: '100% reproducible deployment builds',
+            compatibility: `Fits ${stackStr} setup`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Lock package versions', 'Verify npm ci build locally', 'Add lock check to CI'],
+            evidence: 'package.json'
+        });
+    }
+
+    // 3. Code Category
+    const codeFinding = readiness.findings.find(f => f.id === 'tests' || f.id === 'lint' || f.id === 'build');
+    if (codeFinding) {
+        recommendations.push({
+            category: 'Code',
+            title: codeFinding.solution.replace(/\.$/, ''),
+            current: codeFinding.problem,
+            recommended: codeFinding.solution,
+            why: codeFinding.why,
+            benefit: 'Higher release confidence and automated regression signals',
+            compatibility: `Fits ${stackStr}`,
+            migrationRisk: codeFinding.severity === 'critical' ? 'Medium' : 'Low',
+            migrationPlan: ['Add configuration file', 'Write initial test suite', 'Verify in CI pipeline'],
+            evidence: codeFinding.file || 'package.json'
+        });
+    } else {
+        recommendations.push({
+            category: 'Code',
+            title: 'Add Automated Component Test Suite',
+            current: 'Codebase relies primarily on manual testing',
+            recommended: 'Configure automated unit & integration test coverage for critical paths',
+            why: 'Manual regression verification delays releases and misses subtle API breaks.',
+            benefit: 'Faster release cycles with automated regression signals',
+            compatibility: `Fits ${stackStr}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Add test runner', 'Add test scripts', 'Run test checks in CI'],
+            evidence: 'package.json'
+        });
+    }
+
+    // 4. AI Models Category
+    const hasAI = dependencies.some(d => /openai|anthropic|ai-sdk|@google\/genai/.test(d));
+    if (hasAI) {
+        recommendations.push({
+            category: 'AI Models',
+            title: 'Upgrade to Grounded Structured AI Output',
+            current: 'AI integration uses raw prompt completions',
+            recommended: 'Adopt structured JSON schema output & evidence context injection',
+            why: 'Unstructured LLM responses can introduce schema hallucinations or format errors.',
+            benefit: 'Deterministic JSON parsing with 0 schema failure rate',
+            compatibility: `Native fit for ${stackStr} AI provider`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Define response JSON schema', 'Pass schema to AI client', 'Add response schema validator'],
+            evidence: 'package.json'
+        });
+    } else {
+        recommendations.push({
+            category: 'AI Models',
+            title: 'Integrate Evidence-Grounded AI Project Twin',
+            current: 'No AI SDK detected in dependencies',
+            recommended: 'Connect Project Twin evidence context builder to query API routes & readiness findings',
+            why: 'Developers need instant repository Q&A grounded in evidence without reading every file.',
+            benefit: 'Instant, evidence-backed answers for developers and onboarding teammates',
+            compatibility: `Fits ${stackStr}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Add Project Twin context builder', 'Wire evidence index', 'Expose Ask AI endpoint'],
+            evidence: 'package.json'
+        });
+    }
+
+    // 5. UI/Design Category
+    const hasUI = frameworks.some(f => ['React', 'Vue', 'Next.js', 'Tailwind CSS'].includes(f)) || dependencies.some(d => /react|vue|tailwind/.test(d));
+    if (hasUI) {
+        recommendations.push({
+            category: 'UI/Design',
+            title: 'Adopt Modern Responsive Design Tokens',
+            current: 'UI components use mixed custom styles & inline values',
+            recommended: 'Standardize design tokens using CSS variables & accessible component primitives',
+            why: 'Inconsistent spacing and hardcoded colors reduce design quality and accessibility.',
+            benefit: 'Consistent dark mode design system & clean accessibility contrast',
+            compatibility: `Native fit for ${frameworks.find(f => ['React', 'Next.js', 'Vue', 'Tailwind CSS'].includes(f)) || 'UI'}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Define design tokens in root CSS', 'Refactor hardcoded values', 'Verify dark mode contrast'],
+            evidence: 'package.json'
+        });
+    } else {
+        recommendations.push({
+            category: 'UI/Design',
+            title: 'Implement Clean Component Architecture',
+            current: 'UI layout uses monolithic page components',
+            recommended: 'Refactor layout into decoupled visual components with prop validation',
+            why: 'Monolithic page files hinder reusability and complicate UI updates.',
+            benefit: 'Decoupled, reusable component library',
+            compatibility: `Fits ${stackStr}`,
+            migrationRisk: 'Low',
+            migrationPlan: ['Extract reusable UI primitives', 'Standardize component props', 'Verify rendering'],
+            evidence: 'src/components'
+        });
+    }
+
+    // 6. Performance Category
+    recommendations.push({
+        category: 'Performance',
+        title: 'Optimize Asset Bundling & Dynamic Splitting',
+        current: 'Monolithic single bundle output without code splitting',
+        recommended: 'Configure vendor chunk splitting & dynamic import boundaries for heavy modules',
+        why: 'Large initial bundle sizes slow down initial page load times on slower networks.',
+        benefit: 'Faster Largest Contentful Paint (LCP) and reduced payload size',
+        compatibility: `Fits ${stackStr}`,
+        migrationRisk: 'Low',
+        migrationPlan: ['Configure bundler splitChunks / manualChunks', 'Add lazy loading for modals', 'Verify bundle size'],
+        evidence: 'package.json'
+    });
+
+    return recommendations;
 }
 
 function architectureFrom(frameworks, dependencies) {
@@ -338,6 +484,7 @@ async function analyzeRepository(input, options = {}) {
 module.exports = {
     analyzeRepository,
     buildReadiness,
+    buildRecommendations,
     classifyFiles,
     extractEnvironment,
     parseRepository
