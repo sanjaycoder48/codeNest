@@ -85,24 +85,19 @@ router.get('/:id', (req, res) => {
     res.json(job);
 });
 
+const { diagnoseDeploymentFailure } = require('../services/deploymentDoctor');
+
 router.post('/deployment/diagnose', (req, res) => {
-    const { logs = '', environment = [], requiredEnvironment = [] } = req.body || {};
-    const configured = new Set(Array.isArray(environment) ? environment : []);
-    const required = Array.isArray(requiredEnvironment) ? requiredEnvironment : [];
-    const missing = required.find((item) => item && !configured.has(item.name));
-    const logMatch = String(logs).slice(0, 20000).match(/(?:missing|undefined|not defined)[:\s]+([A-Z][A-Z0-9_]*)/i);
-    const variable = missing?.name || logMatch?.[1];
-
-    if (!variable) {
-        return res.json({ status: 'needs-review', confidence: 64, cause: 'No single configuration failure could be verified.', actions: ['Inspect full build log', 'Compare build and local runtime versions'] });
-    }
-
+    const { logs = '', repositoryTwin = null, environment = [], requiredEnvironment = [] } = req.body || {};
+    const diagnosis = diagnoseDeploymentFailure({ logs, repositoryTwin, environment, requiredEnvironment });
+    
+    // Combine full diagnostic schema with legacy field aliases for backward compatibility
     res.json({
-        status: 'diagnosed', confidence: missing ? 98 : 83,
-        cause: `${variable} is missing from the deployment environment.`,
-        affected: missing?.file || 'Build configuration',
-        explanation: `The repository references ${variable}, but only the variable name was inspected. No secret value was read or exposed.`,
-        actions: ['Locate reference', 'Configure variable', 'Retry preview deployment']
+        ...diagnosis,
+        cause: diagnosis.rootCause,
+        affected: diagnosis.affectedFile,
+        explanation: diagnosis.sideEffects,
+        actions: diagnosis.recommendedFix
     });
 });
 
