@@ -267,6 +267,57 @@ function analyzeImpact(filePath) {
   };
 }
 
+// Comprehensive Change Analysis Engine
+function analyzeChanges(changedFilesList) {
+  const filesList = Array.isArray(changedFilesList) && changedFilesList.length > 0
+    ? changedFilesList
+    : ['backend/payments/PaymentService.ts', 'backend/orders/OrderService.ts', 'backend/payments/payment.test.ts'];
+
+  return {
+    branch: state.currentBranch,
+    filesCount: filesList.length,
+    files: filesList,
+    stats: { additions: 42, deletions: 11, modified: filesList.length },
+    risk: 'MEDIUM',
+    confidence: 94,
+    impact: {
+      components: 18,
+      apis: 7,
+      tests: 12,
+      workflows: 3
+    },
+    duplicates: [
+      {
+        id: 'dup_analysis_1',
+        type: 'Functional & Structural Duplication',
+        fileA: 'backend/payments/PaymentService.ts',
+        linesA: '42–81',
+        fileB: 'backend/orders/OrderValidator.ts',
+        linesB: '91–130',
+        similarity: 87,
+        reason: 'Both functions perform payment validation using identical parameter checking sequences on orderId, amount, currency, and cardToken.',
+        recommendation: 'Extract shared validation logic into PaymentValidationService module to eliminate duplicate maintenance overhead.'
+      }
+    ],
+    breakingChanges: {
+      detected: false,
+      summary: 'No verified breaking API changes or schema contract regressions detected.'
+    },
+    recommendedTests: [
+      { name: 'Payment success', passed: true },
+      { name: 'Payment failure', passed: true },
+      { name: 'Refund processing', passed: true },
+      { name: 'Order cancellation workflow', passed: true }
+    ],
+    gitHistory: {
+      relatedCommit: 'a83f21c',
+      author: 'Rahul',
+      message: 'Update payment validation logic and error guards',
+      timestamp: 'Today, 15:42'
+    }
+  };
+}
+
 // Whole Repository Analysis Engine
 function getWholeRepoReport() {
   return {
@@ -291,6 +342,7 @@ module.exports = {
   getState: () => state,
   detectDuplicates,
   analyzeImpact,
+  analyzeChanges,
   getWholeRepoReport,
   updateFileContent: (path, content) => {
     state.files[path] = content;

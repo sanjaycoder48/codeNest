@@ -70,4 +70,14 @@ describe('TwinSpace API Endpoints', () => {
     assert.strictEqual(res.body.developer.username.toLowerCase(), 'octocat');
     assert.ok(res.body.developer.avatar);
   });
+
+  it('POST /api/twinspace/analysis/changes returns structured change intelligence', async () => {
+    const res = await request(app)
+      .post('/api/twinspace/analysis/changes')
+      .send({ files: ['backend/payments/PaymentService.ts'] });
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.risk, 'MEDIUM');
+    assert.strictEqual(res.body.confidence, 94);
+    assert.ok(res.body.duplicates.length > 0);
+  });
 });

@@ -685,3 +685,155 @@ export function RepoSearchModal({ open, onClose, files, onOpenFile }) {
     </div>
   );
 }
+
+export function ChangeAnalysisModal({ open, onClose, currentBranch, onOpenFile }) {
+  const [analyzing, setAnalyzing] = useState(true);
+  const [stageIndex, setStageIndex] = useState(0);
+
+  const stages = [
+    'Scanning changed files...',
+    'Checking repository relationships...',
+    'Checking duplicate implementations...',
+    'Analyzing Git history...',
+    'Calculating change impact...',
+    'Generating recommendations...'
+  ];
+
+  React.useEffect(() => {
+    if (open) {
+      setAnalyzing(true);
+      setStageIndex(0);
+
+      const interval = setInterval(() => {
+        setStageIndex(prev => {
+          if (prev < stages.length - 1) return prev + 1;
+          clearInterval(interval);
+          setAnalyzing(false);
+          return prev;
+        });
+      }, 350);
+
+      return () => clearInterval(interval);
+    }
+  }, [open, stages.length]);
+
+  if (!open) return null;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#161b22', border: '1px solid #a855f766', borderRadius: '12px', width: '680px', maxWidth: '92vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column', color: '#c9d1d9', boxShadow: '0 20px 48px rgba(0,0,0,0.8)', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #30363d', background: '#0d1117', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', display: 'grid', placeItems: 'center', color: '#fff' }}>
+              <Bot size={16} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f0f6fc', margin: 0 }}>PROJECT TWIN CHANGE ANALYSIS</h3>
+              <span style={{ fontSize: '0.72rem', color: '#8b949e' }}>Branch: <code>{currentBranch}</code> • Repository Context Scan</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#8b949e', cursor: 'pointer' }}><X size={20} /></button>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          {analyzing ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ display: 'inline-block', width: '42px', height: '42px', border: '3px solid #30363d', borderTopColor: '#a855f7', borderRadius: '50%', animation: 'spin 0.8s linear infinite', marginBottom: '16px' }} />
+              <h4 style={{ fontSize: '1.1rem', color: '#f0f6fc', marginBottom: '8px' }}>Analyzing Changed Files & Repository Graph</h4>
+              <p style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: '600' }}>{stages[stageIndex]}</p>
+              <div style={{ width: '100%', maxWidth: '380px', height: '4px', background: '#21262d', borderRadius: '2px', margin: '20px auto 0', overflow: 'hidden' }}>
+                <div style={{ width: `${((stageIndex + 1) / stages.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #a855f7)', transition: 'width 0.3s ease' }} />
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Summary Metrics Banner */}
+              <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '8px', padding: '14px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#8b949e', textTransform: 'uppercase' }}>Overall Risk</div>
+                  <strong style={{ fontSize: '1.1rem', color: '#eab308' }}>🟠 MEDIUM</strong>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#8b949e', textTransform: 'uppercase' }}>AI Confidence</div>
+                  <strong style={{ fontSize: '1.1rem', color: '#3fb950' }}>94%</strong>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#8b949e', textTransform: 'uppercase' }}>Files Changed</div>
+                  <strong style={{ fontSize: '1.1rem', color: '#58a6ff' }}>3 (+42/-11)</strong>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: '#8b949e', textTransform: 'uppercase' }}>Affected Nodes</div>
+                  <strong style={{ fontSize: '1.1rem', color: '#c084fc' }}>18 Components</strong>
+                </div>
+              </div>
+
+              {/* FILES CHANGED */}
+              <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '8px', padding: '14px' }}>
+                <strong style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>FILES CHANGED (3)</strong>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {['backend/payments/PaymentService.ts', 'backend/orders/OrderService.ts', 'backend/payments/payment.test.ts'].map(f => (
+                    <div key={f} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', background: '#161b22', padding: '6px 10px', borderRadius: '4px' }}>
+                      <code style={{ color: '#58a6ff' }}>{f}</code>
+                      <button onClick={() => { onOpenFile(f); onClose(); }} style={{ background: '#1f6feb22', border: '1px solid #1f6feb66', color: '#58a6ff', borderRadius: '4px', padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer' }}>Open File</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* EXACT DUPLICATE CODE EVIDENCE */}
+              <div style={{ background: '#0d1117', border: '1px solid #a855f7aa', borderRadius: '8px', padding: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#eab308' }}>⚠ DUPLICATE CODE DETECTED</span>
+                  <span style={{ fontSize: '0.7rem', background: '#a855f733', color: '#c084fc', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>87% Similarity</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#c9d1d9', marginBottom: '8px' }}>
+                  New validation logic in <code>PaymentService.ts</code> (Lines 42–81) is structurally similar to:
+                  <br />
+                  <strong style={{ color: '#f0f6fc' }}>OrderValidator.ts (Lines 91–130)</strong>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#8b949e', margin: '0 0 10px 0' }}>
+                  <strong>Reason:</strong> Both functions perform payment validation using identical parameter checking sequences on orderId, amount, currency, and cardToken.
+                </p>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => { onOpenFile('backend/payments/PaymentService.ts'); onClose(); }} style={{ background: '#21262d', border: '1px solid #30363d', color: '#f0f6fc', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer' }}>Open PaymentService.ts</button>
+                  <button onClick={() => { onOpenFile('backend/orders/OrderValidator.ts'); onClose(); }} style={{ background: '#1f6feb22', border: '1px solid #1f6feb66', color: '#58a6ff', borderRadius: '4px', padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer' }}>Open OrderValidator.ts</button>
+                </div>
+              </div>
+
+              {/* RECOMMENDED TESTS & GIT HISTORY */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '8px', padding: '14px' }}>
+                  <strong style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>RECOMMENDED TESTS</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.78rem', color: '#c9d1d9' }}>
+                    <div>✓ Payment success flow</div>
+                    <div>✓ Payment failure boundary</div>
+                    <div>✓ Refund processing</div>
+                    <div>✓ Order cancellation check</div>
+                  </div>
+                </div>
+
+                <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '8px', padding: '14px' }}>
+                  <strong style={{ fontSize: '0.8rem', color: '#8b949e', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>GIT HISTORY CORRELATION</strong>
+                  <div style={{ fontSize: '0.78rem', color: '#c9d1d9' }}>
+                    Related Commit: <code style={{ color: '#58a6ff' }}>a83f21c</code>
+                    <br />
+                    Author: <strong>Rahul</strong>
+                    <br />
+                    Message: <em>&quot;Update payment validation logic&quot;</em>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div style={{ padding: '14px 20px', borderTop: '1px solid #30363d', background: '#0d1117', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <button onClick={onClose} style={{ background: '#21262d', border: '1px solid #30363d', color: '#c9d1d9', borderRadius: '6px', padding: '8px 16px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer' }}>Close Analysis</button>
+        </div>
+      </div>
+    </div>
+  );
+}

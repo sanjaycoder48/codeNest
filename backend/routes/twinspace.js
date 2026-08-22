@@ -118,8 +118,14 @@ router.post('/pull-requests/merge', (req, res) => {
 
 // Change impact analysis
 router.get('/analysis/impact', (req, res) => {
-  const filePath = req.query.path || 'backend/payments/PaymentService.ts';
+  const filePath = req.query.path || '';
   res.json(twinspaceService.analyzeImpact(filePath));
+});
+
+// Comprehensive change analysis
+router.post('/analysis/changes', (req, res) => {
+  const { files } = req.body || {};
+  res.json(twinspaceService.analyzeChanges(files));
 });
 
 // Duplicate code detection

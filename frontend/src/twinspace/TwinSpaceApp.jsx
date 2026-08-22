@@ -3,7 +3,7 @@ import { TopBar } from './components/TopBar';
 import { LeftSidebar } from './components/LeftSidebar';
 import { CenterEditor } from './components/CenterEditor';
 import { RightSidebar } from './components/RightSidebar';
-import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal, ConnectDeveloperModal, RepoSearchModal } from './components/Modals';
+import { CommitModal, PushModal, CreatePRModal, PRReviewModal, DemoTourModal, ConnectDeveloperModal, RepoSearchModal, ChangeAnalysisModal } from './components/Modals';
 import { IntelligenceReport } from './components/IntelligenceReport';
 import { io } from 'socket.io-client';
 import {
@@ -194,6 +194,7 @@ export function Checkout() {
   const [tourModalOpen, setTourModalOpen] = useState(false);
   const [connectDevModalOpen, setConnectDevModalOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [analyzeModalOpen, setAnalyzeModalOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -399,6 +400,7 @@ export function Checkout() {
             currentBranch={currentBranch}
             onSelectBranch={setCurrentBranch}
             onCreateBranch={handleCreateBranch}
+            onOpenAnalyzeChanges={() => setAnalyzeModalOpen(true)}
             onOpenCommit={() => setCommitModalOpen(true)}
             onOpenPush={() => setPushModalOpen(true)}
             onOpenPR={() => setCreatePRModalOpen(true)}
@@ -406,6 +408,9 @@ export function Checkout() {
             onOpenDemoTour={() => setTourModalOpen(true)}
             onOpenConnectDev={() => setConnectDevModalOpen(true)}
             onSearch={() => setSearchModalOpen(true)}
+            changedFilesCount={3}
+            additions={42}
+            deletions={11}
           />
 
           <div style={{ flex: 1, display: 'flex', overflow: 'hidden', width: '100%' }}>
@@ -438,6 +443,7 @@ export function Checkout() {
 
             <RightSidebar
               activeFile={activeTabPath}
+              onOpenFile={handleOpenFile}
               impactData={{
                 affectedNodes: ['AuthService.ts', 'JWTMiddleware.ts', 'POST /api/auth/login', 'User Service', 'Admin API', 'Protected Client Routes'],
                 recommendedReviewers: ['Arun (Tech Lead)', 'Priya (Security Lead)'],
@@ -473,6 +479,7 @@ export function Checkout() {
       <DemoTourModal open={tourModalOpen} onClose={() => setTourModalOpen(false)} />
       <ConnectDeveloperModal open={connectDevModalOpen} onClose={() => setConnectDevModalOpen(false)} onDeveloperConnected={handleDeveloperConnected} />
       <RepoSearchModal open={searchModalOpen} onClose={() => setSearchModalOpen(false)} files={files} onOpenFile={handleOpenFile} />
+      <ChangeAnalysisModal open={analyzeModalOpen} onClose={() => setAnalyzeModalOpen(false)} currentBranch={currentBranch} onOpenFile={handleOpenFile} />
     </div>
   );
 }

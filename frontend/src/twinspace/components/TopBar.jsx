@@ -8,7 +8,9 @@ import {
   Plus,
   FileText,
   Play,
-  UserCheck
+  UserCheck,
+  BrainCircuit,
+  CheckCircle2
 } from 'lucide-react';
 
 export function TopBar({
@@ -20,13 +22,17 @@ export function TopBar({
   currentBranch,
   onSelectBranch,
   onCreateBranch,
+  onOpenAnalyzeChanges,
   onOpenCommit,
   onOpenPush,
   onOpenPR,
   onOpenReport,
   onOpenDemoTour,
   onOpenConnectDev,
-  onSearch
+  onSearch,
+  changedFilesCount = 3,
+  additions = 42,
+  deletions = 11
 }) {
   const [userDropdown, setUserDropdown] = useState(false);
   const [branchDropdown, setBranchDropdown] = useState(false);
@@ -206,6 +212,33 @@ export function TopBar({
           <Search size={12} />
           <span>Search repo (Ctrl+K)</span>
         </button>
+
+        {/* Dynamic Git Status Indicator */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: changedFilesCount > 0 ? '#1f6feb1a' : '#2386361a',
+          border: changedFilesCount > 0 ? '1px solid #1f6feb44' : '1px solid #23863644',
+          borderRadius: '6px',
+          padding: '3px 8px',
+          fontSize: '0.72rem',
+          flexShrink: 0
+        }}>
+          {changedFilesCount > 0 ? (
+            <>
+              <span style={{ color: '#eab308', fontWeight: '700' }}>●</span>
+              <strong style={{ color: '#c9d1d9' }}>{changedFilesCount} files changed</strong>
+              <span style={{ color: '#3fb950', fontSize: '0.68rem', fontWeight: '700' }}>+{additions}</span>
+              <span style={{ color: '#f85149', fontSize: '0.68rem', fontWeight: '700' }}>-{deletions}</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 size={12} style={{ color: '#3fb950' }} />
+              <span style={{ color: '#3fb950', fontWeight: '600' }}>Working Tree Clean</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Right section: Collaborators Presence, User Switcher, & Action Buttons */}
@@ -330,6 +363,31 @@ export function TopBar({
         </div>
 
         <div style={{ height: '18px', width: '1px', background: '#30363d' }} />
+
+        {/* 🧠 Prominent Analyze Changes Button */}
+        <button
+          onClick={onOpenAnalyzeChanges}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            background: changedFilesCount > 0
+              ? 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+              : '#21262d',
+            border: changedFilesCount > 0 ? 'none' : '1px solid #30363d',
+            borderRadius: '6px',
+            padding: '4px 11px',
+            color: '#ffffff',
+            fontSize: '0.75rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            boxShadow: changedFilesCount > 0 ? '0 0 12px rgba(168, 85, 247, 0.4)' : 'none'
+          }}
+        >
+          <BrainCircuit size={14} />
+          <span>🧠 Analyze Changes</span>
+        </button>
 
         {/* Git Action Buttons */}
         <button

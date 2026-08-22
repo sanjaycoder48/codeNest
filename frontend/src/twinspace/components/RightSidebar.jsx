@@ -9,7 +9,10 @@ import {
   CheckCircle2,
   ArrowRight,
   Zap,
-  Layers
+  Layers,
+  GitCommit,
+  ExternalLink,
+  FileText
 } from 'lucide-react';
 
 export function RightSidebar({
@@ -17,7 +20,8 @@ export function RightSidebar({
   impactData,
   duplicatesData,
   users,
-  currentUser
+  currentUser,
+  onOpenFile
 }) {
   const [activeTab, setActiveTab] = useState('context'); // context, duplicates, impact, review, presence
 
@@ -131,35 +135,101 @@ export function RightSidebar({
             <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '10px', marginBottom: '10px' }}>
               <div style={{ fontSize: '0.75rem', color: '#8b949e', marginBottom: '2px' }}>OPEN FILE</div>
               <strong style={{ fontSize: '0.85rem', color: '#58a6ff' }}>{activeFile || 'backend/payments/PaymentService.ts'}</strong>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+              <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
                 <span style={{ background: '#23863633', color: '#3fb950', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: '700' }}>Health: 78/100</span>
                 <span style={{ background: '#30363d', color: '#c9d1d9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem' }}>342 Lines</span>
+                <span style={{ background: '#30363d', color: '#c9d1d9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem' }}>18 Functions</span>
+                <span style={{ background: '#30363d', color: '#c9d1d9', padding: '2px 6px', borderRadius: '4px', fontSize: '0.65rem' }}>63% Coverage</span>
               </div>
             </div>
 
             <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '10px', marginBottom: '10px' }}>
-              <strong style={{ fontSize: '0.75rem', color: '#f0f6fc', display: 'block', marginBottom: '6px' }}>Used By Services:</strong>
+              <strong style={{ fontSize: '0.75rem', color: '#8b949e', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>USED BY</strong>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>Login API</span>
-                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>User API</span>
-                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>Admin API</span>
+                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', color: '#c9d1d9' }}>Login API</span>
+                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', color: '#c9d1d9' }}>User API</span>
+                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', color: '#c9d1d9' }}>Admin API</span>
               </div>
             </div>
 
             <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '10px', marginBottom: '10px' }}>
-              <strong style={{ fontSize: '0.75rem', color: '#f0f6fc', display: 'block', marginBottom: '6px' }}>Depends On:</strong>
+              <strong style={{ fontSize: '0.75rem', color: '#8b949e', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>DEPENDS ON</strong>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>JWTMiddleware</span>
-                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem' }}>PostgreSQL DB</span>
+                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', color: '#c9d1d9' }}>JWTMiddleware</span>
+                <span style={{ background: '#161b22', border: '1px solid #30363d', padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', color: '#c9d1d9' }}>PostgreSQL DB</span>
               </div>
             </div>
 
-            <div style={{ background: '#271c0c', border: '1px solid #74510b', borderRadius: '6px', padding: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e3b341', fontWeight: '700', fontSize: '0.75rem', marginBottom: '4px' }}>
-                <AlertTriangle size={14} />
-                <span>POTENTIALLY AFFECTED: 18 COMPONENTS</span>
+            <div style={{ background: '#271c0c', border: '1px solid #74510b', borderRadius: '6px', padding: '10px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e3b341', fontWeight: '700', fontSize: '0.75rem' }}>
+                  <AlertTriangle size={14} />
+                  <span>CHANGE IMPACT</span>
+                </div>
+                <span style={{ background: '#da3633', color: '#fff', fontSize: '0.6rem', fontWeight: '800', padding: '1px 5px', borderRadius: '3px' }}>RISK: HIGH</span>
               </div>
-              <p style={{ fontSize: '0.7rem', color: '#c9d1d9', margin: 0 }}>Modifying this file triggers change impact analysis across 7 APIs and 12 unit test suites.</p>
+              <p style={{ fontSize: '0.7rem', color: '#c9d1d9', margin: 0 }}>
+                Potentially affected: <strong>18 components</strong>, <strong>7 APIs</strong>, <strong>12 test suites</strong>.
+              </p>
+            </div>
+
+            {/* DUPLICATE FINDING PREVIEW */}
+            <div style={{ background: '#0d1117', border: '1px solid #a855f766', borderRadius: '6px', padding: '10px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: '700', color: '#eab308' }}>⚠ DUPLICATE DETECTED</span>
+                <span style={{ fontSize: '0.65rem', background: '#a855f733', color: '#c084fc', padding: '1px 5px', borderRadius: '4px', fontWeight: '700' }}>87% match</span>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#c9d1d9', marginBottom: '6px' }}>
+                Similar logic found in <code>backend/orders/OrderValidator.ts</code>
+              </div>
+              <button
+                onClick={() => onOpenFile && onOpenFile('backend/orders/OrderValidator.ts')}
+                style={{
+                  width: '100%',
+                  background: '#1f6feb22',
+                  border: '1px solid #1f6feb66',
+                  borderRadius: '4px',
+                  color: '#58a6ff',
+                  padding: '4px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}
+              >
+                <FileText size={12} /> View Finding (OrderValidator.ts:91-130)
+              </button>
+            </div>
+
+            {/* RECENT GIT HISTORY */}
+            <div style={{ background: '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '10px' }}>
+              <strong style={{ fontSize: '0.72rem', color: '#8b949e', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>RECENT GIT HISTORY</strong>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ borderBottom: '1px solid #21262d', paddingBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                    <code style={{ color: '#58a6ff' }}>a83f21c</code>
+                    <span style={{ color: '#8b949e' }}>Rahul • Today</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#c9d1d9' }}>Update payment validation</div>
+                </div>
+                <div style={{ borderBottom: '1px solid #21262d', paddingBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                    <code style={{ color: '#58a6ff' }}>71b92de</code>
+                    <span style={{ color: '#8b949e' }}>Priya • Yesterday</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#c9d1d9' }}>Refactor payment API</div>
+                </div>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem' }}>
+                    <code style={{ color: '#58a6ff' }}>91af2aa</code>
+                    <span style={{ color: '#8b949e' }}>Arun • Aug 19</span>
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#c9d1d9' }}>Fix refund handling</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -254,20 +324,37 @@ export function RightSidebar({
         {activeTab === 'presence' && (
           <div>
             <div style={{ fontSize: '0.7rem', fontWeight: '700', color: '#8b949e', textTransform: 'uppercase', marginBottom: '8px' }}>
-              Active Developer Presence ({users?.length || 0})
+              👥 ACTIVE DEVELOPERS ({users?.length || 0})
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {users?.map(u => (
-                <div key={u.id} style={{ background: u.id === currentUser?.id ? '#1f6feb22' : '#0d1117', border: '1px solid #30363d', borderRadius: '6px', padding: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div
+                  key={u.id}
+                  onClick={() => onOpenFile && u.activeFile && onOpenFile(u.activeFile)}
+                  title={`Click to open ${u.name}'s active file (${u.activeFile})`}
+                  style={{
+                    background: u.id === currentUser?.id ? '#1f6feb22' : '#0d1117',
+                    border: u.id === currentUser?.id ? '1px solid #1f6feb66' : '1px solid #30363d',
+                    borderRadius: '6px',
+                    padding: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
                   <img src={u.avatar} alt={u.name} style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <strong style={{ fontSize: '0.75rem', color: '#f0f6fc' }}>{u.name}</strong>
-                      <span style={{ fontSize: '0.65rem', color: '#238636', fontWeight: '700' }}>● Online</span>
+                      <span style={{ fontSize: '0.65rem', color: '#238636', fontWeight: '700' }}>🟢 Online</span>
                     </div>
                     <div style={{ fontSize: '0.65rem', color: '#8b949e' }}>
-                      {u.role} — <code>{u.activeFile}</code>
+                      {u.role}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: '#58a6ff', marginTop: '2px' }}>
+                      Editing: <code>{u.activeFile}</code>
                     </div>
                   </div>
                 </div>
