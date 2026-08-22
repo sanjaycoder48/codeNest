@@ -7,11 +7,13 @@ import { DiscussionsThread } from './DiscussionsThread';
 import { ApprovalQueue } from './ApprovalQueue';
 import { ActivityTimeline } from './ActivityTimeline';
 import { AICollabAssistant } from './AICollabAssistant';
+import { InviteCollaboratorsModal } from './InviteCollaboratorsModal';
 import { LayoutGrid, MessageSquare, ShieldCheck, Sparkles, X } from 'lucide-react';
 
 export function CollaborationWorkspace({ twin, currentUser }) {
   const [activeSubTab, setActiveSubTab] = useState('board'); // 'board' | 'discussions'
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const [teamMembers] = useState([
     { id: 'usr_1', name: 'Sanjay', role: 'Full-Stack Developer', avatar: 'https://avatars.githubusercontent.com/u/583231?v=4', status: 'Online' },
@@ -106,6 +108,13 @@ export function CollaborationWorkspace({ twin, currentUser }) {
         brief="3 important changes detected today. Authentication was updated with token rotation, and 2 pending reviews are awaiting team sign-off."
         onToggleNotifications={() => setShowNotifications(!showNotifications)}
         unreadCount={unreadCount}
+        onOpenInvite={() => setShowInviteModal(true)}
+      />
+
+      <InviteCollaboratorsModal
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        repoName={twin?.project?.fullName || 'sanjaycoder48/codeNest'}
       />
 
       {/* Notifications Drawer */}

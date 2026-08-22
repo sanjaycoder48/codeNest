@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sparkles, Users, AlertCircle, CheckCircle2, Clock, Bell } from 'lucide-react';
+import { Sparkles, Users, AlertCircle, CheckCircle2, Clock, Bell, UserPlus } from 'lucide-react';
 
-export function TeamOverviewBanner({ teamMembers, stats, brief, onToggleNotifications, unreadCount }) {
+export function TeamOverviewBanner({ teamMembers, stats, brief, onToggleNotifications, unreadCount, onOpenInvite }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
       {/* Top Header Row */}
@@ -18,8 +18,8 @@ export function TeamOverviewBanner({ teamMembers, stats, brief, onToggleNotifica
           </p>
         </div>
 
-        {/* Right side: Team avatars & Notifications */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* Right side: Team avatars, Invite & Notifications */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {/* Team Avatars */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {teamMembers.map((m, idx) => (
@@ -39,6 +39,27 @@ export function TeamOverviewBanner({ teamMembers, stats, brief, onToggleNotifica
               />
             ))}
           </div>
+
+          {/* Invite GitHub Collaborators Button */}
+          <button
+            onClick={onOpenInvite}
+            style={{
+              background: '#238636',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              color: '#ffffff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '0.78rem',
+              fontWeight: '700'
+            }}
+          >
+            <UserPlus size={15} />
+            <span>Invite Collaborators</span>
+          </button>
 
           {/* Quick Notification Bell */}
           <button
