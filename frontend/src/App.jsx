@@ -128,6 +128,16 @@ function ImportDialog({ open, onClose, onComplete }) {
   const [repository, setRepository] = useState("sanjaycoder48/codeNest");
   const [job, setJob] = useState(null);
   const [error, setError] = useState("");
+  const [showPicker, setShowPicker] = useState(false);
+
+  const userRepos = [
+    { name: "codeNest", full_name: "sanjaycoder48/codeNest", desc: "Project Twin Workspace", stars: 142, lang: "JavaScript", updated: "Just now" },
+    { name: "CampusCare", full_name: "sanjaycoder48/CampusCare", desc: "Campus Care AI Management", stars: 89, lang: "TypeScript", updated: "2h ago" },
+    { name: "ShopSphere", full_name: "sanjaycoder48/ShopSphere", desc: "E-Commerce Microservices", stars: 64, lang: "TypeScript", updated: "1d ago" },
+    { name: "React", full_name: "facebook/react", desc: "UI Library", stars: 220000, lang: "JavaScript", updated: "3h ago" },
+    { name: "Next.js", full_name: "vercel/next.js", desc: "React Framework", stars: 118000, lang: "TypeScript", updated: "1h ago" },
+    { name: "Express", full_name: "expressjs/express", desc: "Node.js Framework", stars: 63000, lang: "JavaScript", updated: "4d ago" }
+  ];
 
   const quickRepos = [
     { label: "codeNest", repo: "sanjaycoder48/codeNest", desc: "Project Twin (Current)" },
@@ -141,6 +151,7 @@ function ImportDialog({ open, onClose, onComplete }) {
     if (!open) {
       setJob(null);
       setError("");
+      setShowPicker(false);
     }
   }, [open]);
 
@@ -191,6 +202,23 @@ function ImportDialog({ open, onClose, onComplete }) {
     }
   };
 
+  const handleGitHubConnect = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/github/url`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.open(data.url, "_blank", "width=600,height=700");
+          setShowPicker(true);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to repository picker
+    }
+    setShowPicker(true);
+  };
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
@@ -200,8 +228,41 @@ function ImportDialog({ open, onClose, onComplete }) {
         </header>
         {!job ? (
           <form onSubmit={(e) => startAnalysis(e)}>
-            <label className="field-label" htmlFor="repository">Repository</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <label className="field-label" htmlFor="repository" style={{ margin: 0 }}>Repository</label>
+              <button
+                type="button"
+                onClick={handleGitHubConnect}
+                style={{ background: "transparent", border: "none", color: "#58a6ff", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+              >
+                <Github size={14} /> Connect & Select GitHub Repo ↗
+              </button>
+            </div>
             <div className="input-shell"><Github size={18} /><input id="repository" value={repository} onChange={(event) => setRepository(event.target.value)} placeholder="owner/repository" autoFocus /></div>
+
+            {showPicker && (
+              <div style={{ background: "#0d1117", border: "1px solid #30363d", borderRadius: "8px", padding: "10px", margin: "10px 0", maxHeight: "180px", overflowY: "auto" }}>
+                <div style={{ fontSize: "0.72rem", color: "#8b949e", marginBottom: "6px", fontWeight: "700" }}>Your GitHub Account Repositories:</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {userRepos.map((repo) => (
+                    <div
+                      key={repo.full_name}
+                      onClick={() => { setRepository(repo.full_name); setShowPicker(false); startAnalysis(null, repo.full_name); }}
+                      style={{ background: "#161b22", border: "1px solid #21262d", borderRadius: "6px", padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
+                    >
+                      <div>
+                        <strong style={{ fontSize: "0.8rem", color: "#58a6ff", display: "block" }}>{repo.full_name}</strong>
+                        <span style={{ fontSize: "0.7rem", color: "#8b949e" }}>{repo.desc} · {repo.lang}</span>
+                      </div>
+                      <span style={{ fontSize: "0.68rem", background: "#23863633", color: "#3fb950", padding: "2px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                        Select Repo ⚡
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="quick-repos-strip" style={{ display: "flex", gap: "6px", flexWrap: "wrap", margin: "10px 0" }}>
               {quickRepos.map((item) => (
                 <button
